@@ -20,7 +20,6 @@
   --carte-ombre: 0 6px 24px rgba(47, 59, 54, .07);
   --rayon:       20px;
   --transition:  .45s cubic-bezier(.4, 0, .2, 1);
-  --nav-hauteur: 96px;
 }
 
 [data-theme="sombre"] {
@@ -164,7 +163,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .app { max-width: 520px; margin: 0 auto; }
 
 .vue {
-  padding: max(1.2rem, env(safe-area-inset-top)) 1.3rem calc(var(--nav-hauteur) + 2rem + env(safe-area-inset-bottom));
+  padding: max(1.2rem, env(safe-area-inset-top)) 1.3rem calc(96px + env(safe-area-inset-bottom));
   animation: apparait .5s ease both;
 }
 .vue-pleine {
@@ -219,56 +218,6 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .hero-titre { font-size: 1.25rem; }
 .hero-meta { font-size: .85rem; color: var(--encre-2); }
 .hero-texte .btn { margin-top: .5rem; }
-
-/* ---------- Progression accueil ---------- */
-.progression-resume {
-  margin-top: 1rem;
-  padding: 1rem 1.1rem;
-  border-radius: var(--rayon);
-  background: var(--fond-2);
-  box-shadow: var(--carte-ombre);
-}
-.progression-entete {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: .9rem;
-}
-.progression-titre {
-  font-size: 1.05rem;
-  margin-top: .1rem;
-}
-.progression-badge {
-  flex: 0 0 auto;
-  padding: .35rem .7rem;
-  border-radius: 999px;
-  background: var(--sauge-pale);
-  color: var(--sauge-fonce);
-  font-size: .82rem;
-  font-weight: 700;
-}
-.progression-details {
-  display: grid;
-  gap: .65rem;
-}
-.progression-ligne {
-  display: grid;
-  grid-template-columns: minmax(92px, .8fr) 1.2fr;
-  gap: .75rem;
-  align-items: baseline;
-}
-.progression-label {
-  color: var(--encre-2);
-  font-size: .78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-.progression-ligne strong {
-  font-size: .9rem;
-  line-height: 1.35;
-}
 
 /* ---------- Micro-apprentissage ---------- */
 .micro {
@@ -549,7 +498,6 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
   display: flex; justify-content: space-around;
   max-width: 520px; margin: 0 auto;
-  min-height: var(--nav-hauteur);
   background: var(--fond-2);
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -6px 24px rgba(47, 59, 54, .08);
