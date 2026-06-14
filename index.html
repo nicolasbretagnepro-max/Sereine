@@ -104,13 +104,6 @@
       <!-- Micro-apprentissage -->
       <p id="microAccueil" class="micro" role="note"></p>
 
-      <!-- Humeur du jour -->
-      <section class="bloc" aria-labelledby="humeurTitre">
-        <h2 id="humeurTitre" class="bloc-titre">Comment vous sentez-vous aujourd'hui&nbsp;?</h2>
-        <div id="humeurs" class="humeurs" role="group" aria-label="Humeur du jour"></div>
-        <div id="humeurReco" class="humeur-reco hidden"></div>
-      </section>
-
       <!-- Urgence émotionnelle -->
       <section class="bloc" aria-labelledby="expressTitre">
         <div class="bloc-entete">
@@ -151,17 +144,26 @@
       <header class="entete"><h1 class="titre-vue">Votre progression</h1></header>
       <div class="stats-grille" id="statsGrille"></div>
       <section class="bloc">
-        <h2 class="bloc-titre">Évolution de votre bien-être</h2>
-        <p class="bloc-sous">Moyennes de vos ressentis après séance (1 à 5).</p>
-        <div id="graphRessentis" class="graph"></div>
-      </section>
-      <section class="bloc">
         <h2 class="bloc-titre">Calendrier de pratique</h2>
         <div id="calendrier" class="calendrier"></div>
       </section>
       <section class="bloc">
         <h2 class="bloc-titre">Vos badges</h2>
         <div id="badges" class="badges"></div>
+      </section>
+
+      <!-- Sauvegarde / Import-Export -->
+      <section class="bloc" aria-labelledby="sauvegardeTitre">
+        <h2 id="sauvegardeTitre" class="bloc-titre">Sauvegarder ma progression</h2>
+        <p class="bloc-sous">Exportez vos données pour les retrouver après une mise à jour de l'app.</p>
+        <div class="sauvegarde-boutons">
+          <button id="exportBtn" class="btn btn-secondaire">⬇ Exporter</button>
+          <label class="btn btn-secondaire sauvegarde-import-label" role="button" tabindex="0">
+            ⬆ Importer
+            <input type="file" id="importInput" accept=".json" style="display:none">
+          </label>
+        </div>
+        <p id="importMsg" class="import-msg hidden" aria-live="polite"></p>
       </section>
     </main>
 
@@ -225,13 +227,6 @@
         <span class="fin-icone" aria-hidden="true">🌸</span>
         <h1 id="finMessage" class="fin-titre">Merci pour ce moment.</h1>
         <p id="finConclusion" class="fin-conclusion"></p>
-
-        <div id="finRessentis">
-          <h2 class="bloc-titre">Comment vous sentez-vous&nbsp;?</h2>
-          <div class="ressenti"><span class="ressenti-label">Stress</span><div class="ressenti-echelle" data-champ="stress" role="radiogroup" aria-label="Niveau de stress de 1 à 5"></div></div>
-          <div class="ressenti"><span class="ressenti-label">Énergie</span><div class="ressenti-echelle" data-champ="energie" role="radiogroup" aria-label="Niveau d'énergie de 1 à 5"></div></div>
-          <div class="ressenti"><span class="ressenti-label">Humeur</span><div class="ressenti-echelle" data-champ="humeur" role="radiogroup" aria-label="Humeur de 1 à 5"></div></div>
-        </div>
 
         <div id="finStats" class="fin-stats"></div>
         <div id="finBadge" class="fin-badge hidden"></div>

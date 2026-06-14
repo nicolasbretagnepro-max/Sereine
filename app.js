@@ -323,40 +323,6 @@ function rendreAccueil() {
   const graine = parseInt(aujourdHui().replaceAll("-", ""), 10);
   $("#microAccueil").textContent = "💡 " + DATA.micro[graine % DATA.micro.length];
 
-  /* Humeurs */
-  const cont = $("#humeurs");
-  cont.innerHTML = "";
-  DATA.humeurs.forEach(hm => {
-    const b = document.createElement("button");
-    b.className = "humeur" + (etat.humeurJour?.date === aujourdHui() && etat.humeurJour.id === hm.id ? " actif" : "");
-    b.innerHTML = `<span>${hm.icone}</span><span>${hm.label}</span>`;
-    b.addEventListener("click", () => {
-      etat.humeurJour = { date: aujourdHui(), id: hm.id };
-      sauver(); rendreAccueil();
-    });
-    cont.appendChild(b);
-  });
-
-  /* Recommandations selon l'humeur */
-  const recoBloc = $("#humeurReco");
-  if (etat.humeurJour?.date === aujourdHui()) {
-    const r = DATA.recoHumeur[etat.humeurJour.id];
-    recoBloc.classList.remove("hidden");
-    recoBloc.innerHTML = `<p>${r.msg}</p><div class="humeur-reco-boutons"></div>`;
-    const btns = recoBloc.querySelector(".humeur-reco-boutons");
-    r.sugg.forEach(([type, id]) => {
-      const c = trouverContenu(type, id);
-      if (!c?.item) return;
-      const b = document.createElement("button");
-      b.className = "btn btn-secondaire";
-      b.textContent = `${c.item.titre} · ${c.item.duree} min`;
-      b.addEventListener("click", () => ouvrirPrepa(c.type, c.item));
-      btns.appendChild(b);
-    });
-  } else {
-    recoBloc.classList.add("hidden");
-  }
-
   /* Express */
   const ex = $("#expressListe");
   ex.innerHTML = "";
@@ -709,34 +675,12 @@ $("#souffleQuitter").addEventListener("click", () => {
 /* ============================================================
    12. FIN DE SÉANCE
    ============================================================ */
-const ressentis = { stress: null, energie: null, humeur: null };
-
 function ouvrirFin({ type, item }, minutes, anticipe) {
   /* Message positif (jamais culpabilisant, même en cas d'arrêt anticipé) */
   $("#finMessage").textContent = anticipe
     ? "Chaque minute compte. Bien joué d'avoir pris ce temps."
     : DATA.felicitations[Math.floor(Math.random() * DATA.felicitations.length)];
   $("#finConclusion").textContent = item.conclusion || "";
-
-  /* Échelles de ressenti 1 à 5 */
-  ressentis.stress = ressentis.energie = ressentis.humeur = null;
-  $$(".ressenti-echelle").forEach(ech => {
-    ech.innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-      const b = document.createElement("button");
-      b.className = "ressenti-pt";
-      b.textContent = i;
-      b.setAttribute("role", "radio");
-      b.setAttribute("aria-checked", "false");
-      b.addEventListener("click", () => {
-        ressentis[ech.dataset.champ] = i;
-        ech.querySelectorAll(".ressenti-pt").forEach(x => { x.classList.remove("actif"); x.setAttribute("aria-checked", "false"); });
-        b.classList.add("actif");
-        b.setAttribute("aria-checked", "true");
-      });
-      ech.appendChild(b);
-    }
-  });
 
   /* Enregistrement de la séance */
   const dejaFaits = etat.parcoursFait.length;
@@ -776,9 +720,6 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
 }
 
 $("#finTerminer").addEventListener("click", () => {
-  /* Sauvegarde des ressentis sur la dernière entrée */
-  const derniere = etat.historique[etat.historique.length - 1];
-  if (derniere) Object.assign(derniere, ressentis);
   sauver();
   montrerVue("accueil");
 });
@@ -808,29 +749,6 @@ function rendreJournal() {
     <div class="stat"><div class="stat-valeur">${minSemaine} min</div><div class="stat-label">cette semaine</div></div>
     <div class="stat"><div class="stat-valeur">${etat.parcoursFait.length}/14</div><div class="stat-label">parcours débutant</div></div>`;
 
-  /* Graphique des ressentis : moyenne des 7 dernières entrées notées */
-  const notes = etat.historique.filter(e => e.stress || e.energie || e.humeur).slice(-7);
-  const graph = $("#graphRessentis");
-  if (!notes.length) {
-    graph.innerHTML = `<p class="graph-vide">Notez vos ressentis en fin de séance pour voir votre évolution ici.</p>`;
-  } else {
-    const moy = champ => {
-      const vals = notes.map(e => e[champ]).filter(Boolean);
-      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-    };
-    const series = [
-      ["Stress", moy("stress"), "var(--bleu)"],
-      ["Énergie", moy("energie"), "var(--sauge)"],
-      ["Humeur", moy("humeur"), "var(--lavande)"]
-    ];
-    graph.innerHTML = series.map(([label, val, couleur]) => `
-      <div class="graph-col">
-        <span class="graph-val">${val ? val.toFixed(1) : "–"}</span>
-        <div class="graph-barre" style="height:${(val / 5) * 100}%;background:${couleur}"></div>
-        <span class="graph-label">${label}</span>
-      </div>`).join("");
-  }
-
   /* Calendrier du mois en cours */
   const cal = $("#calendrier");
   const annee = maintenant.getFullYear(), mois = maintenant.getMonth();
@@ -856,7 +774,131 @@ function rendreJournal() {
 }
 
 /* ============================================================
-   14. DÉMARRAGE
+   14. IMPORT / EXPORT DE PROFIL
+   ============================================================ */
+
+/**
+ * Exporte l'état complet dans un fichier JSON téléchargeable.
+ * Format : { version, exportedAt, etat }
+ */
+function exporterProfil() {
+  const payload = {
+    version: "sereine-v1",
+    exportedAt: new Date().toISOString(),
+    etat
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `sereine-${aujourdHui()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Affiche un message de retour sous les boutons import/export.
+ * @param {string} texte
+ * @param {boolean} erreur
+ */
+function msgImport(texte, erreur = false) {
+  const el = $("#importMsg");
+  if (!el) return;
+  el.textContent = texte;
+  el.className = "import-msg" + (erreur ? " import-msg-erreur" : " import-msg-ok");
+  el.classList.remove("hidden");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.add("hidden"), 5000);
+}
+
+/**
+ * Importe un profil depuis un fichier JSON.
+ * Fusionne intelligemment : union des séances, des badges et de l'historique.
+ * Les préférences et le thème du fichier importé prennent le dessus.
+ */
+function importerProfil(fichier) {
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+
+      // Validation de base
+      if (!parsed.version || !parsed.etat) {
+        msgImport("❌ Fichier invalide ou corrompu.", true);
+        return;
+      }
+
+      const src = parsed.etat;
+      const dateExport = parsed.exportedAt
+        ? new Date(parsed.exportedAt).toLocaleDateString("fr-FR")
+        : "date inconnue";
+
+      const nbSeances  = src.historique?.length  ?? 0;
+      const nbParcours = src.parcoursFait?.length ?? 0;
+      const nbBadges   = src.badges?.length       ?? 0;
+
+      const confirme = window.confirm(
+        `Importer la sauvegarde du ${dateExport} ?\n\n` +
+        `• ${nbSeances} séance(s) dans l'historique\n` +
+        `• ${nbParcours}/14 étape(s) du parcours\n` +
+        `• ${nbBadges} badge(s)\n\n` +
+        `Vos données actuelles seront fusionnées avec cette sauvegarde.`
+      );
+      if (!confirme) return;
+
+      // Fusion : on part des données actuelles et on complète avec l'import
+      const fusionne = { ...etatDefaut, ...etat };
+
+      // Parcours : union des ids complétés
+      const setParcours = new Set([...(etat.parcoursFait ?? []), ...(src.parcoursFait ?? [])]);
+      fusionne.parcoursFait = [...setParcours];
+
+      // Badges : union
+      const setBadges = new Set([...(etat.badges ?? []), ...(src.badges ?? [])]);
+      fusionne.badges = [...setBadges];
+
+      // Historique : union sur date+id (dédoublonné), trié par date
+      const mapHisto = new Map();
+      [...(etat.historique ?? []), ...(src.historique ?? [])].forEach(entry => {
+        const cle = `${entry.date}|${entry.id}`;
+        if (!mapHisto.has(cle)) mapHisto.set(cle, entry);
+      });
+      fusionne.historique = [...mapHisto.values()].sort((a, b) => a.date.localeCompare(b.date));
+
+      // Préférences : celles de l'import priment si définies
+      if (src.prefs) fusionne.prefs = { ...fusionne.prefs, ...src.prefs };
+      if (src.theme != null) fusionne.theme = src.theme;
+      if (src.onboarded)     fusionne.onboarded = true;
+
+      etat = fusionne;
+      sauver();
+      appliquerTheme();
+      rendreJournal();
+      msgImport(`✓ Profil importé (${nbSeances} séances, ${nbParcours} étapes du parcours).`);
+
+    } catch {
+      msgImport("❌ Erreur de lecture — fichier corrompu ?", true);
+    }
+  };
+  reader.readAsText(fichier);
+}
+
+// Branchement des boutons (exécuté une seule fois)
+(function brancherSauvegarde() {
+  const exportBtn  = $("#exportBtn");
+  const importInput = $("#importInput");
+  if (exportBtn)   exportBtn.addEventListener("click", exporterProfil);
+  if (importInput) importInput.addEventListener("change", e => {
+    if (e.target.files[0]) importerProfil(e.target.files[0]);
+    e.target.value = ""; // permet de re-sélectionner le même fichier
+  });
+})();
+
+/* ============================================================
+   15. DÉMARRAGE
    ============================================================ */
 appliquerTheme();
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", appliquerTheme);

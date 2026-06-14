@@ -512,6 +512,24 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .nav-item span { font-size: 1.25rem; }
 .nav-item.nav-actif { color: var(--sauge-fonce); }
 
+/* ---------- Sauvegarde / Import-Export ---------- */
+.sauvegarde-boutons {
+  display: flex; gap: .8rem; flex-wrap: wrap; margin-top: .8rem;
+}
+.sauvegarde-import-label {
+  cursor: pointer;
+}
+.import-msg {
+  margin-top: .75rem;
+  padding: .7rem 1rem;
+  border-radius: 12px;
+  font-size: .88rem;
+  font-weight: 600;
+  animation: apparait .3s ease both;
+}
+.import-msg-ok      { background: var(--sauge-pale);  color: var(--sauge-fonce); }
+.import-msg-erreur  { background: #fdecea;             color: #c0392b; }
+
 /* ---------- Animations ---------- */
 @keyframes apparait {
   from { opacity: 0; transform: translateY(14px); }
