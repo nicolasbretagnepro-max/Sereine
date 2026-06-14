@@ -360,6 +360,67 @@ function rendreAncreDuJour() {
   el.classList.remove("hidden");
 }
 
+function libelleObjectif(id) {
+  return DATA.objectifs.find(o => o.id === id)?.label || "Découvrir la méditation";
+}
+
+function minutesCetteSemaine() {
+  const maintenant = new Date();
+  const lundi = new Date(maintenant);
+  lundi.setHours(0, 0, 0, 0);
+  lundi.setDate(maintenant.getDate() - ((maintenant.getDay() + 6) % 7));
+  const lundiStr = lundi.toISOString().slice(0, 10);
+  return etat.historique
+    .filter(e => e.date >= lundiStr)
+    .reduce((total, e) => total + e.minutes, 0);
+}
+
+function joursPratiquesCetteSemaine() {
+  const maintenant = new Date();
+  const lundi = new Date(maintenant);
+  lundi.setHours(0, 0, 0, 0);
+  lundi.setDate(maintenant.getDate() - ((maintenant.getDay() + 6) % 7));
+  const lundiStr = lundi.toISOString().slice(0, 10);
+  return new Set(etat.historique.filter(e => e.date >= lundiStr).map(e => e.date)).size;
+}
+
+function rendreProgressionAccueil(reco, p1Faits) {
+  const details = $("#progressionDetails");
+  if (!details) return;
+
+  const objectif = libelleObjectif(etat.prefs.objectif);
+  const moment = DATA.moments.find(m => m.id === etat.prefs.moment);
+  const routine = moment && moment.id !== "perso"
+    ? `${etat.prefs.duree || 5} min, ${moment.label.toLowerCase()}`
+    : `${etat.prefs.duree || 5} min, au moment qui vous convient`;
+  const semaineJours = joursPratiquesCetteSemaine();
+  const semaineMinutes = minutesCetteSemaine();
+  const prochaine = reco.type === "parcours"
+    ? `Séance ${reco.item.num}/14 : ${reco.item.titre}`
+    : reco.type === "parcours2"
+      ? `Étape ${reco.item.num} : ${reco.item.titre}`
+      : reco.item.titre;
+
+  $("#progressionBadge").textContent = reco.type === "parcours" ? `${p1Faits}/14` : `${etat.historique.length} séances`;
+  details.innerHTML = `
+    <div class="progression-ligne">
+      <span class="progression-label">Objectif</span>
+      <strong>${objectif}</strong>
+    </div>
+    <div class="progression-ligne">
+      <span class="progression-label">Prochaine étape</span>
+      <strong>${prochaine}</strong>
+    </div>
+    <div class="progression-ligne">
+      <span class="progression-label">Routine</span>
+      <strong>${routine}</strong>
+    </div>
+    <div class="progression-ligne">
+      <span class="progression-label">Cette semaine</span>
+      <strong>${semaineJours} jour${semaineJours > 1 ? "s" : ""} · ${semaineMinutes} min</strong>
+    </div>`;
+}
+
 function rendreAccueil() {
   /* Salutation selon l'heure */
   const h = new Date().getHours();
@@ -383,6 +444,7 @@ function rendreAccueil() {
     reco.type === "resp"      ? `Respiration · ${reco.item.duree} min` :
     `${reco.item.duree} min`;
   $("#heroBtn").onclick = () => ouvrirPrepa(reco.type, reco.item);
+  rendreProgressionAccueil(reco, p1Faits);
 
   /* Micro-apprentissage du jour (stable sur la journée) */
   const graine = parseInt(aujourdHui().replaceAll("-", ""), 10);
