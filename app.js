@@ -60,9 +60,37 @@ const reduitMotion = window.matchMedia("(prefers-reduced-motion: reduce)").match
 let audioCtx = null;
 function ctxAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (audioCtx.state === "suspended") audioCtx.resume(); // Promise ignorée volontairement
   return audioCtx;
 }
+
+/**
+ * iOS Safari : déverrouille l'AudioContext dès le premier geste utilisateur.
+ * Un buffer silencieux d'1 sample suffit à faire passer le contexte
+ * de "suspended" à "running". Sans ça, aucun son ne sort sur iOS/PWA.
+ */
+function debloquerAudio() {
+  try {
+    const ctx = ctxAudio();
+    const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch { /* audio indisponible */ }
+}
+
+/* Déverrouillage sur le premier geste (touchstart = iOS, click = desktop) */
+["touchstart", "click"].forEach(ev =>
+  document.addEventListener(ev, debloquerAudio, { once: true, passive: true })
+);
+
+/* Reprendre l'AudioContext si l'app revient au premier plan (iOS PWA, verrou écran) */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && audioCtx) {
+    audioCtx.resume().catch(() => {});
+  }
+});
 
 /** Cloche de début : superposition de deux sinus, tonalité douce. */
 function cloche(volume = .6) {
@@ -619,6 +647,11 @@ $("#prepaCommencer").addEventListener("click", () => lancerLecteur(seanceCourant
 const lecteur = { timer: null, ecoule: 0, total: 0, enPause: false, mp3: null, fini: false };
 
 async function lancerLecteur({ item }) {
+  /* iOS Safari : activer l'AudioContext dans la pile synchrone du geste utilisateur.
+     Après un await, iOS ne considère plus l'appel comme issu d'un geste direct
+     et bloque toute tentative de lecture audio. */
+  try { ctxAudio(); } catch { /* ignore si Web Audio indisponible */ }
+
   const guidage = $("#optGuidage").checked;
   const sons = $("#optSons").checked;
   const volume = $("#optVolume").value / 100;
