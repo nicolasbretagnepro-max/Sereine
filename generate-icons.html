@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sereine — Générateur d'icônes</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #1c1a17;
+      color: #e8e4dc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2.5rem 1.5rem;
+      gap: 2rem;
+    }
+    h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: .02em; color: #c8b89a; }
+    .previews {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .preview-item { display: flex; flex-direction: column; align-items: center; gap: .6rem; }
+    .preview-item canvas {
+      border-radius: 22%;
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+    .preview-label { font-size: .78rem; color: #8a8070; }
+    .status {
+      font-size: .9rem;
+      background: #2a2720;
+      border: 1px solid #3a3630;
+      border-radius: 10px;
+      padding: .9rem 1.4rem;
+      max-width: 420px;
+      width: 100%;
+      line-height: 1.7;
+    }
+    .status .ok { color: #7dbf8a; }
+    .status .pending { color: #b8a878; }
+    .instructions {
+      background: #242118;
+      border: 1px solid #3a3630;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      font-size: .85rem;
+      line-height: 1.75;
+    }
+    .instructions strong { color: #c8b89a; display: block; margin-bottom: .4rem; }
+    .instructions ol { padding-left: 1.2rem; }
+    .instructions li { margin: .2rem 0; }
+    code {
+      background: #333028;
+      padding: .1em .4em;
+      border-radius: 4px;
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: .82em;
+      color: #d4c49a;
+    }
+    .btn-retry {
+      margin-top: .8rem;
+      padding: .5rem 1.2rem;
+      background: #3B2314;
+      color: #F7F4ED;
+      border: none;
+      border-radius: 8px;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .btn-retry:hover { background: #4d2e19; }
+  </style>
+</head>
+<body>
+
+  <h1>Sereine — Générateur d'icônes</h1>
+
+  <div class="previews" id="previews"></div>
+
+  <div class="status" id="status">
+    <span class="pending">⏳ Génération en cours…</span>
+  </div>
+
+  <div class="instructions">
+    <strong>Comment utiliser ces icônes :</strong>
+    <ol>
+      <li>Les fichiers PNG sont téléchargés automatiquement</li>
+      <li>Créez le dossier <code>assets/icons/</code> dans votre projet si besoin</li>
+      <li>Placez-y <code>icon-180.png</code>, <code>icon-192.png</code> et <code>icon-512.png</code></li>
+      <li>Sur Safari iOS : Partager → Sur l'écran d'accueil</li>
+    </ol>
+    <br>
+    <small style="color:#6a6058">Si les téléchargements ont été bloqués, cliquez le bouton ci-dessous.</small>
+    <br>
+    <button class="btn-retry" id="retryBtn" style="display:none" onclick="downloadAll()">⬇ Retélécharger les icônes</button>
+  </div>
+
+  <script>
+    // ─── Spiral drawing ─────────────────────────────────────────────────────
+
+    function drawSpiral(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const cx = size / 2;
+      const cy = size / 2;
+
+      // Background
+      ctx.fillStyle = '#F7F4ED';
+      ctx.fillRect(0, 0, size, size);
+
+      // Archimedean spiral: r = a + b*θ
+      // ~2.65 turns, starting from near-center, ending near edge
+      const turns    = 2.65;
+      const totalAngle = turns * 2 * Math.PI;
+      const maxR     = size * 0.44;   // 44% of size → leaves ~12% margin each side
+      const a        = size * 0.008;  // tiny inner offset
+      const b        = (maxR - a) / totalAngle;
+      const strokeW  = size * 0.030;  // slightly heavier for small sizes
+      const steps    = 900;           // smooth
+
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const t     = i / steps;
+        const theta = t * totalAngle;
+        const r     = a + b * theta;
+        // Start from top (−π/2), unwind clockwise
+        const angle = theta - Math.PI / 2;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle   = '#3B2314';
+      ctx.lineWidth     = strokeW;
+      ctx.lineCap       = 'round';
+      ctx.lineJoin      = 'round';
+      ctx.stroke();
+    }
+
+    // ─── Build canvases ──────────────────────────────────────────────────────
+
+    const SIZES = [
+      { px: 512, filename: 'icon-512.png', label: '512×512 (manifest)' },
+      { px: 192, filename: 'icon-192.png', label: '192×192 (manifest)' },
+      { px: 180, filename: 'icon-180.png', label: '180×180 (apple-touch-icon)' },
+    ];
+
+    const canvases = {};
+    const previews = document.getElementById('previews');
+
+    SIZES.forEach(({ px, filename, label }) => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = px;
+      canvas.height = px;
+      drawSpiral(canvas);
+      canvases[filename] = canvas;
+
+      // Preview at display size (max 140px)
+      const displayPx = Math.min(px, 140);
+      canvas.style.width  = displayPx + 'px';
+      canvas.style.height = displayPx + 'px';
+
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+
+      const lbl = document.createElement('span');
+      lbl.className = 'preview-label';
+      lbl.textContent = label;
+
+      item.appendChild(canvas);
+      item.appendChild(lbl);
+      previews.appendChild(item);
+    });
+
+    // ─── Download helpers ────────────────────────────────────────────────────
+
+    const downloaded = {};
+
+    function downloadOne(filename, delayMs) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const canvas = canvases[filename];
+          canvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const a   = document.createElement('a');
+            a.href     = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+            downloaded[filename] = true;
+            resolve();
+          }, 'image/png');
+        }, delayMs);
+      });
+    }
+
+    function downloadAll() {
+      const statusEl = document.getElementById('status');
+      statusEl.innerHTML = '<span class="pending">⏳ Téléchargement en cours…</span>';
+      Promise.all([
+        downloadOne('icon-512.png',  300),
+        downloadOne('icon-192.png',  900),
+        downloadOne('icon-180.png', 1500),
+      ]).then(() => {
+        statusEl.innerHTML = [
+          '<span class="ok">✓ icon-512.png téléchargé</span><br>',
+          '<span class="ok">✓ icon-192.png téléchargé</span><br>',
+          '<span class="ok">✓ icon-180.png téléchargé</span>',
+        ].join('');
+        document.getElementById('retryBtn').style.display = 'inline-block';
+      });
+    }
+
+    // Auto-download on load
+    window.addEventListener('load', downloadAll);
+  </script>
+</body>
+</html>

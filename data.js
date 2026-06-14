@@ -275,6 +275,109 @@ const DATA = {
     }
   ],
 
+  /* ---------- PARCOURS 2 : LA PLEINE CONSCIENCE AU QUOTIDIEN ---------- */
+  /* Débloqué après la séance 14. 7 étapes courtes ancrées dans la vie ordinaire. */
+  parcours2: [
+    {
+      id: "q1", num: 1, titre: "Le café du matin", duree: 2,
+      objectif: "Transformer un geste ordinaire en moment de pleine présence.",
+      pedagogie: "La méditation ne s'arrête pas sur le coussin. Ce matin, boire votre café ou votre thé devient votre pratique : pas d'écran, pas d'anticipation de la journée — juste la tasse, la chaleur, l'arôme.",
+      script: [
+        [0,   "Tenez votre tasse à deux mains. Sentez la chaleur dans vos paumes."],
+        [18,  "Portez la tasse à votre nez. Respirez l'arôme sans chercher à le nommer."],
+        [40,  "Prenez une première gorgée, lentement. Sentez la chaleur descendre."],
+        [65,  "Regardez autour de vous : la lumière du matin, les sons, l'espace."],
+        [90,  "Une deuxième gorgée, encore plus lente. Goût, chaleur, texture."],
+        [110, "Vous n'avez rien à faire avant de reposer cette tasse."]
+      ],
+      conclusion: "Ce matin existe une seule fois. Vous venez de le goûter vraiment."
+    },
+    {
+      id: "q2", num: 2, titre: "L'attente", duree: 3,
+      objectif: "Transformer un moment d'attente en ancre de présence.",
+      pedagogie: "Attendre le bus, la machine à café, un ascenseur : on sort instinctivement le téléphone. Aujourd'hui, essayez le contraire — rester là, sans occupation, juste présent.",
+      script: [
+        [0,   "Vous attendez quelque chose. Posez le téléphone si vous l'aviez en main."],
+        [18,  "Sentez vos pieds dans vos chaussures. Le sol sous vous."],
+        [42,  "Regardez autour de vous comme si c'était la première fois dans cet endroit."],
+        [72,  "Écoutez un son — n'importe lequel. Suivez-le jusqu'à ce qu'il s'arrête."],
+        [108, "Votre respiration : naturelle, discrète. Suivez-la deux ou trois fois."],
+        [150, "L'attente touche à sa fin. Vous l'avez traversée sans la fuir."]
+      ],
+      conclusion: "Chaque attente est une invitation. La prochaine fois, vous saurez."
+    },
+    {
+      id: "q3", num: 3, titre: "La marche", duree: 3,
+      objectif: "Découvrir la marche consciente.",
+      pedagogie: "Thich Nhat Hanh disait : « Marchez comme si vos pieds embrassaient la terre. » Chaque pas peut être un retour au présent — pas besoin de forêt : un couloir, une rue, quelques mètres suffisent.",
+      script: [
+        [0,   "Choisissez un trajet court : un couloir, un trottoir, quelques mètres."],
+        [18,  "Commencez à marcher un peu plus lentement que d'habitude."],
+        [42,  "Sentez le talon qui touche le sol en premier, puis la voûte plantaire, puis les orteils."],
+        [72,  "Votre poids se déplace d'un pied à l'autre. Remarquez ce balancement doux."],
+        [108, "Levez les yeux. Regardez là où vous allez, sans anticiper."],
+        [140, "Chaque pas : vous arrivez. Pas « vous allez ». Vous êtes déjà là."]
+      ],
+      conclusion: "Il n'y a nulle part où aller. Là où vous posez le pied, c'est chez vous."
+    },
+    {
+      id: "q4", num: 4, titre: "Les repas", duree: 3,
+      objectif: "Ralentir le début d'un repas pour y être vraiment présent.",
+      pedagogie: "Manger en pleine conscience ne signifie pas manger en silence pendant une heure. Ça commence par une bouchée — la première. Le reste du repas peut être normal.",
+      script: [
+        [0,   "Vous êtes devant votre repas. Avant de commencer, regardez-le."],
+        [20,  "Les couleurs, les formes, l'arôme qui monte."],
+        [45,  "Prenez une première bouchée. Posez vos couverts."],
+        [68,  "Mâchez lentement. Quel goût ? Quelle texture ? Quelle chaleur ou fraîcheur ?"],
+        [98,  "Avalez. Sentez le trajet."],
+        [120, "Un souffle avant la bouchée suivante. Vous avez déjà fait quelque chose de précieux."]
+      ],
+      conclusion: "La nourriture goûte mieux quand on lui prête attention. Et ça commence toujours par la première bouchée."
+    },
+    {
+      id: "q5", num: 5, titre: "Les transitions", duree: 2,
+      objectif: "Créer une micro-pause consciente à chaque changement d'activité.",
+      pedagogie: "Entre deux tâches, on passe souvent directement sans reprendre son souffle. Une pause de vingt secondes à chaque transition restaure l'attention et réduit le sentiment de dispersion.",
+      script: [
+        [0,   "Vous venez de finir quelque chose. Arrêtez-vous avant de passer à la suite."],
+        [18,  "Posez les mains sur vos cuisses ou les bras de votre fauteuil."],
+        [35,  "Trois respirations. Inspirez… expirez. Inspirez… expirez. Inspirez… expirez."],
+        [65,  "Ce qui vient d'être fait est terminé. Ça compte, même si ça semble petit."],
+        [88,  "Quelle est la prochaine chose ? Une seule. La prochaine."],
+        [108, "Un dernier souffle. Puis bougez, avec clarté."]
+      ],
+      conclusion: "Entre chaque acte, il y a un espace. Vous venez d'y habiter quelques secondes."
+    },
+    {
+      id: "q6", num: 6, titre: "Le soir", duree: 4,
+      objectif: "Clore la journée avec douceur, sans rumination.",
+      pedagogie: "Revenir sur sa journée avant de dormir n'est utile que si on ne le fait pas comme un procureur. L'idée : remarquer, pas juger — comme regarder passer un train, pas comme y monter.",
+      script: [
+        [0,   "Allongé ou assis confortablement. Fermez les yeux."],
+        [22,  "Trois grandes respirations pour marquer la fin de la journée."],
+        [58,  "Laissez la journée défiler, du matin jusqu'à maintenant."],
+        [105, "Ne cherchez pas à analyser. Juste observer ce qui vient."],
+        [150, "Un moment difficile ? Notez-le simplement. Pas de jugement."],
+        [195, "Un moment agréable, même minuscule ? Restez-y une seconde."],
+        [228, "La journée a existé. Elle est terminée. Expirez, et laissez-la partir."]
+      ],
+      conclusion: "La nuit ne demande pas de compte-rendu. Elle demande juste que vous la laissiez venir."
+    },
+    {
+      id: "q7", num: 7, titre: "Sans guide", duree: 5,
+      objectif: "Méditer librement, sans guide, sans objectif.",
+      pedagogie: "Voici la séance la plus simple et la plus difficile : cinq minutes sans guide. Pas d'instruction, pas d'objectif, juste vous. C'est exactement ce à quoi tout ce parcours préparait.",
+      script: [
+        [0,   "Installez-vous. Fermez les yeux."],
+        [30,  "À partir de maintenant, vous êtes votre propre guide."],
+        [120, ""],
+        [240, ""],
+        [285, "Quelques instants encore."]
+      ],
+      conclusion: "Vous savez méditer. La pratique, désormais, est entièrement vôtre."
+    }
+  ],
+
   /* ---------- SESSIONS EXPRESS (urgence émotionnelle) ---------- */
   express: [
     {
@@ -379,7 +482,6 @@ const DATA = {
   ],
 
   /* ---------- BIBLIOTHÈQUE ÉMOTIONNELLE ---------- */
-  /* Chaque catégorie : une méditation dédiée + renvois express/respiration */
   emotions: [
     {
       id: "stress", titre: "Stress", icone: "🌊",
@@ -612,7 +714,6 @@ const DATA = {
     { id: "triste",   icone: "😔", label: "Triste" }
   ],
 
-  /* Pour chaque humeur : message + suggestions (type, id) */
   recoHumeur: {
     bien:    { msg: "Belle énergie ! C'est le moment idéal pour avancer dans votre parcours.", sugg: [["parcours", null], ["resp", "coherence"]] },
     fatigue: { msg: "Fatigué ? Une séance douce ou une respiration énergisante, sans forcer.", sugg: [["emotion", "fatigue"], ["resp", "energie"]] },
@@ -648,5 +749,37 @@ const DATA = {
     { id: "retour",  label: "En rentrant du travail", icone: "🏠" },
     { id: "coucher", label: "Avant de dormir", icone: "🌙" },
     { id: "perso",   label: "Personnalisé", icone: "✨" }
-  ]
+  ],
+
+  /* ---------- ANCRES DU JOUR ---------- */
+  /* Rotation quotidienne selon l'heure : matin / après-midi / soir */
+  ancresJour: {
+    matin: [
+      { icone: "☕", texte: "Ce matin : prenez 3 respirations avant de consulter votre téléphone." },
+      { icone: "🌅", texte: "Ce matin : regardez par la fenêtre 30 secondes, sans rien faire d'autre." },
+      { icone: "🚿", texte: "Ce matin : soyez présent sous la douche — la chaleur, l'eau, le son." },
+      { icone: "☕", texte: "Ce matin : buvez la première gorgée de café sans écran." },
+      { icone: "🌿", texte: "Ce matin : sentez vos pieds au sol avant de vous lever." },
+      { icone: "🌬️", texte: "Ce matin : cinq expirations longues avant de quitter la maison." },
+      { icone: "🧘", texte: "Ce matin : une minute assise, dos droit, avant de commencer la journée." }
+    ],
+    apresmidi: [
+      { icone: "🍃", texte: "Cet après-midi : levez les yeux de votre écran et regardez au loin 20 secondes." },
+      { icone: "💧", texte: "Cet après-midi : buvez un verre d'eau lentement, en pleine conscience." },
+      { icone: "🚶", texte: "Cet après-midi : marchez plus lentement que d'habitude lors de votre prochain trajet." },
+      { icone: "🌬️", texte: "Cet après-midi : trois respirations profondes avant de répondre à un message tendu." },
+      { icone: "🔔", texte: "Cet après-midi : respirez une fois avant de décrocher votre téléphone." },
+      { icone: "☀️", texte: "Cet après-midi : trouvez 2 minutes loin des écrans — juste regarder, écouter." },
+      { icone: "🤲", texte: "Cet après-midi : posez les mains à plat et sentez leur contact avec la surface." }
+    ],
+    soir: [
+      { icone: "🌙", texte: "Ce soir : posez votre téléphone 10 minutes avant de dormir." },
+      { icone: "🕯️", texte: "Ce soir : quel a été le meilleur moment de votre journée, même minuscule ?" },
+      { icone: "🌬️", texte: "Ce soir : cinq expirations lentes pour mettre fin à la journée." },
+      { icone: "🌟", texte: "Ce soir : pensez à une chose pour laquelle vous êtes reconnaissant." },
+      { icone: "📖", texte: "Ce soir : lisez quelques pages d'un livre (pas d'écran) avant de dormir." },
+      { icone: "🌸", texte: "Ce soir : vous avez fait de votre mieux aujourd'hui. C'est suffisant." },
+      { icone: "🛁", texte: "Ce soir : lors de votre routine du soir, faites une seule chose à la fois." }
+    ]
+  }
 };
