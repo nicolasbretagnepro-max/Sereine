@@ -53,12 +53,12 @@ function ctxAudio() {
   return audioCtx;
 }
 
-/** Cloche douce : superposition de deux sinus avec longue décroissance. */
-function cloche(volume = .6, grave = false) {
+/** Cloche de début : superposition de deux sinus, tonalité douce. */
+function cloche(volume = .6) {
   try {
     const ctx = ctxAudio();
     const t = ctx.currentTime;
-    [[grave ? 392 : 523.25, 1], [grave ? 587 : 784, .4]].forEach(([freq, gainRel]) => {
+    [[523.25, 1], [784, .4]].forEach(([freq, gainRel]) => {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
       osc.type = "sine";
@@ -72,6 +72,43 @@ function cloche(volume = .6, grave = false) {
   } catch { /* audio indisponible : silencieux */ }
 }
 
+/**
+ * Bol tibétain de fin de séance.
+ * Synthèse par partiels non harmoniques, déclin long (≈ 7 s).
+ * Accompagné d'une vibration douce si l'appareil le supporte.
+ */
+function bolTibetain(volume = .6) {
+  try {
+    const ctx = ctxAudio();
+    const t = ctx.currentTime;
+    // Partielle fondamentale + harmoniques inharmoniques typiques des bols
+    const partiels = [
+      [396,   1.00],   // fondamentale
+      [871,   0.45],   // × 2.20
+      [1703,  0.18],   // × 4.30
+      [3089,  0.07],   // × 7.80
+    ];
+    partiels.forEach(([freq, rel]) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type  = "sine";
+      osc.frequency.value = freq;
+      // Attaque quasi instantanée (frappe de mailloche), déclin très lent
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(volume * rel * .32, t + .015);
+      g.gain.exponentialRampToValueAtTime(.0001, t + 7.0);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 7.1);
+    });
+  } catch { /* audio indisponible : silencieux */ }
+
+  // Vibration douce (deux pulsations brèves, style "bol")
+  try {
+    if (navigator.vibrate) navigator.vibrate([100, 60, 100]);
+  } catch { /* vibration indisponible */ }
+}
+
 /** Tente de charger un mp3 (assets/audio/<id>.mp3). Renvoie un <audio> ou null. */
 function chargerMp3(id) {
   return new Promise(resolve => {
@@ -81,6 +118,34 @@ function chargerMp3(id) {
     setTimeout(() => resolve(null), 1500); // hors-ligne / absent
   });
 }
+
+/* ============================================================
+   2b. WAKE LOCK — maintenir l'écran allumé pendant les séances
+   API Screen Wake Lock (supportée sur iOS 16.4+ et Chrome Android)
+   ============================================================ */
+let wakeLockSentinel = null;
+
+async function activerWakeLock() {
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLockSentinel = await navigator.wakeLock.request("screen");
+    }
+  } catch { /* non supporté ou refusé */ }
+}
+
+function libererWakeLock() {
+  if (wakeLockSentinel) {
+    wakeLockSentinel.release().catch(() => {});
+    wakeLockSentinel = null;
+  }
+}
+
+// Réacquérir le verrou si l'onglet redevient visible (ex. retour depuis l'app)
+document.addEventListener("visibilitychange", async () => {
+  if (wakeLockSentinel !== null && document.visibilityState === "visible") {
+    await activerWakeLock();
+  }
+});
 
 /* ============================================================
    3. NAVIGATION ENTRE VUES
@@ -423,6 +488,44 @@ function itemDetail(ic, ti, du, action) {
    ============================================================ */
 let seanceCourante = null;   // { type, item }
 
+/**
+ * Génère un résumé des instructions clés du script pour que l'utilisateur
+ * puisse lire comment se comporter AVANT de fermer les yeux.
+ */
+function rendreRecapInstructions(item) {
+  const el = $("#prepaInstructions");
+  if (!el) return;
+
+  if (!item.script || item.script.length === 0) {
+    el.innerHTML = "";
+    return;
+  }
+
+  const tousTextes = item.script.map(([, texte]) => texte);
+  const nb = tousTextes.length;
+
+  // Sélectionner 4 à 6 messages représentatifs (début, milieu, fin)
+  let indices;
+  if (nb <= 5) {
+    indices = tousTextes.map((_, i) => i);
+  } else if (nb <= 8) {
+    indices = [0, Math.floor(nb * .33), Math.floor(nb * .66), nb - 1];
+  } else {
+    indices = [0, Math.floor(nb * .2), Math.floor(nb * .45), Math.floor(nb * .7), nb - 1];
+  }
+
+  // Dédoublonner et garder l'ordre
+  const messages = [...new Set(indices)].map(i => tousTextes[i]);
+
+  el.innerHTML = `
+    <details class="prepa-recap">
+      <summary>Aperçu des instructions (${item.duree} min)</summary>
+      <ol class="prepa-recap-liste">
+        ${messages.map(m => `<li>${m}</li>`).join("")}
+      </ol>
+    </details>`;
+}
+
 function ouvrirPrepa(type, item) {
   /* Les respirations ont leur propre écran dédié */
   if (type === "resp") { lancerSouffle(item); return; }
@@ -434,6 +537,10 @@ function ouvrirPrepa(type, item) {
   $("#prepaTitre").textContent = item.titre;
   $("#prepaMeta").textContent = `${item.duree} min` + (item.objectif ? ` · ${item.objectif}` : "");
   $("#prepaPedagogie").textContent = item.pedagogie || "";
+
+  // Récap des instructions à lire avant de fermer les yeux
+  rendreRecapInstructions(item);
+
   montrerVue("prepa");
 }
 
@@ -464,11 +571,14 @@ async function lancerLecteur({ item }) {
   $("#lecteurHalo").classList.remove("pause");
   montrerVue("lecteur");
 
+  // Maintenir l'écran allumé pendant la séance
+  await activerWakeLock();
+
   /* mp3 éventuel : assets/audio/<id>.mp3 */
   lecteur.mp3 = await chargerMp3(item.id);
   if (lecteur.mp3) { lecteur.mp3.volume = volume; lecteur.mp3.play().catch(() => {}); }
 
-  if (sons) cloche(volume, false);
+  if (sons) cloche(volume);
   lecteur.timer = setInterval(tickLecteur, 1000);
   tickLecteur(true);
 }
@@ -511,11 +621,13 @@ $("#lecteurQuitter").addEventListener("click", () => {
 function stopLecteur() {
   clearInterval(lecteur.timer);
   if (lecteur.mp3) { lecteur.mp3.pause(); lecteur.mp3 = null; }
+  libererWakeLock();
 }
 
 function finirLecteur(anticipe = false) {
   stopLecteur();
-  if (lecteur.sons) cloche(lecteur.volume, true);
+  // Son de fin : bol tibétain + vibration
+  if (lecteur.sons) bolTibetain(lecteur.volume);
   const minutes = Math.max(1, Math.round(lecteur.ecoule / 60));
   ouvrirFin(seanceCourante, minutes, anticipe);
 }
@@ -525,7 +637,7 @@ function finirLecteur(anticipe = false) {
    ============================================================ */
 const souffle = { timer: null, actif: false };
 
-function lancerSouffle(proto) {
+async function lancerSouffle(proto) {
   seanceCourante = { type: "resp", item: proto };
   souffle.actif = true;
   souffle.ecoule = 0;
@@ -534,7 +646,10 @@ function lancerSouffle(proto) {
   $("#souffleTitre").textContent = `${proto.icone} ${proto.titre}`;
   $("#souffleTemps").textContent = mn(0);
   montrerVue("souffle");
-  cloche(.5, false);
+  cloche(.5);
+
+  // Maintenir l'écran allumé pendant l'exercice de respiration
+  await activerWakeLock();
 
   const cercle = $("#souffleCercle");
   const consigne = $("#souffleConsigne");
@@ -574,9 +689,11 @@ function lancerSouffle(proto) {
 
 function finirSouffle(anticipe = false) {
   clearInterval(souffle.timer);
+  libererWakeLock();
   if (!souffle.actif) return;
   souffle.actif = false;
-  cloche(.5, true);
+  // Son de fin : bol tibétain + vibration
+  bolTibetain(.5);
   const minutes = Math.max(1, Math.round(souffle.ecoule / 60));
   ouvrirFin(seanceCourante, minutes, anticipe);
 }
@@ -584,6 +701,7 @@ function finirSouffle(anticipe = false) {
 $("#souffleStop").addEventListener("click", () => finirSouffle(souffle.ecoule < souffle.total));
 $("#souffleQuitter").addEventListener("click", () => {
   clearInterval(souffle.timer);
+  libererWakeLock();
   if (souffle.ecoule >= 30) { souffle.actif = true; finirSouffle(true); }
   else { souffle.actif = false; montrerVue("accueil"); }
 });

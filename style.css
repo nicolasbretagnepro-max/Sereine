@@ -172,6 +172,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 }
 
 .entete { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.4rem; }
+.entete-gauche { display: flex; align-items: center; gap: .75rem; }
 .titre-accueil { font-size: 1.6rem; }
 .titre-vue { font-size: 1.5rem; }
 .vue-intro { color: var(--encre-2); font-size: .95rem; margin-bottom: 1.4rem; }
@@ -182,6 +183,14 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .carte {
   background: var(--fond-2); border-radius: var(--rayon);
   box-shadow: var(--carte-ombre); padding: 1.3rem;
+}
+
+/* ---------- Logo spirale dans l'en-tête ---------- */
+.logo-spirale {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 /* ---------- Héros accueil ---------- */
@@ -384,6 +393,44 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 }
 .option input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--sauge); }
 .option input[type="range"] { flex: 0 0 50%; accent-color: var(--sauge); }
+
+/* ---------- Récap des instructions (accordéon) ---------- */
+.prepa-recap {
+  background: var(--sauge-pale);
+  border-radius: var(--rayon);
+  overflow: hidden;
+}
+.prepa-recap summary {
+  padding: .85rem 1.1rem;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--sauge-fonce);
+  user-select: none;
+}
+.prepa-recap summary::-webkit-details-marker { display: none; }
+.prepa-recap summary::after {
+  content: "›";
+  font-size: 1.2rem;
+  transition: transform .3s ease;
+  flex-shrink: 0;
+}
+.prepa-recap[open] summary::after { transform: rotate(90deg); }
+.prepa-recap-liste {
+  padding: .4rem 1.2rem 1rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+.prepa-recap-liste li {
+  font-size: .88rem;
+  color: var(--encre-2);
+  line-height: 1.45;
+}
 
 /* ---------- Lecteur ---------- */
 #vue-lecteur, #vue-souffle { text-align: center; }

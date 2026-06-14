@@ -5,8 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Sereine — votre coach personnel de méditation et de respiration. Simple, guidé, bienveillant.">
   <meta name="theme-color" content="#F7F4ED">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sereine">
   <title>Sereine — Méditation guidée</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Icônes & PWA -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
@@ -63,9 +71,12 @@
     <!-- Vue : ACCUEIL -->
     <main id="vue-accueil" class="vue" tabindex="-1">
       <header class="entete">
-        <div>
-          <p id="salutation" class="eyebrow">Bonjour</p>
-          <h1 class="titre-accueil">Votre moment à vous</h1>
+        <div class="entete-gauche">
+          <img src="assets/icons/icon-192.png" alt="Sereine" class="logo-spirale" onerror="this.style.display='none'">
+          <div>
+            <p id="salutation" class="eyebrow">Bonjour</p>
+            <h1 class="titre-accueil">Votre moment à vous</h1>
+          </div>
         </div>
         <button id="themeBtn" class="btn-icone" aria-label="Changer de thème">◐</button>
       </header>
@@ -162,6 +173,10 @@
         <h1 id="prepaTitre" class="prepa-titre"></h1>
         <p id="prepaMeta" class="prepa-meta"></p>
         <p id="prepaPedagogie" class="prepa-pedagogie"></p>
+
+        <!-- Récap des instructions : à lire les yeux ouverts avant de commencer -->
+        <div id="prepaInstructions"></div>
+
         <div class="prepa-rappels">
           <p>Installez-vous confortablement.</p>
           <p>Vous n'avez rien à réussir.</p>
