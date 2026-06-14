@@ -550,6 +550,54 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   .souffle-cercle { transition: none; }
 }
 
+/* ---------- Ancre du jour ---------- */
+.ancre-jour {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .85rem 1.1rem;
+  background: var(--lavande-pale);
+  border-radius: 14px;
+  margin: .15rem 0 .4rem;
+}
+.ancre-jour-icone {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.ancre-jour-texte {
+  font-size: .875rem;
+  color: var(--encre-2);
+  margin: 0;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* ---------- Parcours 2 : section Au quotidien ---------- */
+.parcours-section-entete {
+  margin: 1.6rem 0 .6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--sauge-pale);
+}
+.parcours-section-titre {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--encre);
+  margin: 0 0 .2rem;
+}
+.parcours-section-sous {
+  font-size: .83rem;
+  color: var(--encre-2);
+  margin: 0;
+}
+.parcours-section-verrou {
+  font-size: .82rem;
+  color: var(--encre-2);
+  margin: .4rem 0 0;
+  opacity: .6;
+}
+
 /* ---------- Écrans plus larges ---------- */
 @media (min-width: 600px) {
   html { font-size: 17px; }

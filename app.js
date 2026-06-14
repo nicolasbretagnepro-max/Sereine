@@ -255,12 +255,17 @@ function prochaineSeanceParcours() {
   return DATA.parcours.find(s => !etat.parcoursFait.includes(s.id)) || null;
 }
 
+function prochaineSeanceParcours2() {
+  return DATA.parcours2.find(s => !etat.parcoursFait.includes(s.id)) || null;
+}
+
 /** Retrouve un contenu jouable par type + id. */
 function trouverContenu(type, id) {
-  if (type === "parcours") return { type, item: id ? DATA.parcours.find(s => s.id === id) : prochaineSeanceParcours() };
-  if (type === "express")  return { type, item: DATA.express.find(s => s.id === id) };
-  if (type === "resp")     return { type, item: DATA.respiration.find(r => r.id === id) };
-  if (type === "emotion")  return { type: "meditation", item: DATA.emotions.find(e => e.id === id)?.meditation };
+  if (type === "parcours")  return { type, item: id ? DATA.parcours.find(s => s.id === id) : prochaineSeanceParcours() };
+  if (type === "parcours2") return { type, item: id ? DATA.parcours2.find(s => s.id === id) : prochaineSeanceParcours2() };
+  if (type === "express")   return { type, item: DATA.express.find(s => s.id === id) };
+  if (type === "resp")      return { type, item: DATA.respiration.find(r => r.id === id) };
+  if (type === "emotion")   return { type: "meditation", item: DATA.emotions.find(e => e.id === id)?.meditation };
   return null;
 }
 
@@ -276,10 +281,9 @@ function recommandation() {
     if (c?.item) return { ...c, raison: r.msg };
   }
 
-  // Sinon : prochaine séance du parcours
+  // Prochaine séance du parcours 1
   const prochaine = prochaineSeanceParcours();
   if (prochaine) {
-    // Peu de temps déclaré → proposer une alternative courte si la séance est longue
     if (prochaine.duree > etat.prefs.duree + 3) {
       return {
         type: "resp", item: DATA.respiration.find(r => r.id === "coherence"),
@@ -289,39 +293,63 @@ function recommandation() {
     return { type: "parcours", item: prochaine, raison: "Votre prochaine étape du parcours." };
   }
 
-  // Parcours terminé → rotation selon l'objectif initial
+  // Parcours 1 terminé → parcours 2 : pleine conscience au quotidien
+  const prochaine2 = prochaineSeanceParcours2();
+  if (prochaine2) {
+    return { type: "parcours2", item: prochaine2, raison: "Nouveau parcours : la pleine conscience dans la vie ordinaire." };
+  }
+
+  // Tout terminé → pratique libre selon l'objectif
   const mapObjectif = { stress: "stress", dormir: "sommeil", concentration: "concentration", calme: "stress", decouvrir: "motivation" };
   const emo = DATA.emotions.find(e => e.id === (mapObjectif[etat.prefs.objectif] || "stress"));
-  return { type: "meditation", item: emo.meditation, raison: "Parcours terminé : pratique libre adaptée à votre objectif." };
+  return { type: "meditation", item: emo.meditation, raison: "Parcours terminés : pratique libre adaptée à votre objectif." };
 }
 
 /* ============================================================
    6. VUE ACCUEIL
    ============================================================ */
+function rendreAncreDuJour() {
+  const el = $("#ancreDuJour");
+  if (!el || !DATA.ancresJour) return;
+  const h = new Date().getHours();
+  const periode = h < 12 ? "matin" : h < 18 ? "apresmidi" : "soir";
+  const ancres = DATA.ancresJour[periode];
+  const graine = parseInt(aujourdHui().replaceAll("-", ""), 10);
+  const ancre = ancres[graine % ancres.length];
+  el.innerHTML = `<span class="ancre-jour-icone" aria-hidden="true">${ancre.icone}</span><p class="ancre-jour-texte">${ancre.texte}</p>`;
+  el.classList.remove("hidden");
+}
+
 function rendreAccueil() {
   /* Salutation selon l'heure */
   const h = new Date().getHours();
   $("#salutation").textContent = h < 5 ? "Bonne nuit" : h < 12 ? "Bonjour" : h < 18 ? "Bon après-midi" : "Bonsoir";
 
-  /* Héros : progression + recommandation */
-  const faits = etat.parcoursFait.length;
+  /* Héros : progression parcours 1 + recommandation */
+  const p1Faits = etat.parcoursFait.filter(id => DATA.parcours.some(s => s.id === id)).length;
   const prochaine = prochaineSeanceParcours();
   $("#heroNum").textContent = prochaine ? prochaine.num : 14;
   const circ = 2 * Math.PI * 52;
-  $("#ringProgress").style.strokeDashoffset = circ * (1 - faits / DATA.parcours.length);
+  $("#ringProgress").style.strokeDashoffset = circ * (1 - p1Faits / DATA.parcours.length);
 
   const reco = recommandation();
-  $("#heroEyebrow").textContent = reco.type === "parcours" ? "Votre prochaine étape" : "Recommandé pour vous";
+  $("#heroEyebrow").textContent =
+    reco.type === "parcours"  ? "Votre prochaine étape" :
+    reco.type === "parcours2" ? "Pratique au quotidien" : "Recommandé pour vous";
   $("#heroTitre").textContent = reco.item.titre;
   $("#heroMeta").textContent =
-    reco.type === "parcours" ? `Séance ${reco.item.num} · ${reco.item.duree} min`
-    : reco.type === "resp" ? `Respiration · ${reco.item.duree} min`
-    : `${reco.item.duree} min`;
+    reco.type === "parcours"  ? `Séance ${reco.item.num} · ${reco.item.duree} min` :
+    reco.type === "parcours2" ? `Étape ${reco.item.num} · ${reco.item.duree} min` :
+    reco.type === "resp"      ? `Respiration · ${reco.item.duree} min` :
+    `${reco.item.duree} min`;
   $("#heroBtn").onclick = () => ouvrirPrepa(reco.type, reco.item);
 
   /* Micro-apprentissage du jour (stable sur la journée) */
   const graine = parseInt(aujourdHui().replaceAll("-", ""), 10);
   $("#microAccueil").textContent = "💡 " + DATA.micro[graine % DATA.micro.length];
+
+  /* Ancre du jour */
+  rendreAncreDuJour();
 
   /* Express */
   const ex = $("#expressListe");
@@ -373,6 +401,46 @@ function rendreParcours() {
     li.appendChild(b);
     ol.appendChild(li);
   });
+
+  /* ---------- Parcours 2 : Au quotidien ---------- */
+  const p2Section = $("#parcours2Section");
+  if (!p2Section) return;
+  p2Section.innerHTML = "";
+
+  const parcours1Complet = DATA.parcours.every(s => etat.parcoursFait.includes(s.id));
+  const p2Faits = etat.parcoursFait.filter(id => DATA.parcours2.some(s => s.id === id)).length;
+
+  const entete = document.createElement("div");
+  entete.className = "parcours-section-entete";
+  entete.innerHTML = `
+    <h2 class="parcours-section-titre">Au quotidien</h2>
+    <p class="parcours-section-sous">La pleine conscience dans la vie ordinaire · 7 étapes${p2Faits > 0 ? ` · ${p2Faits}/7` : ""}</p>
+    ${!parcours1Complet ? '<p class="parcours-section-verrou">🔒 Débloqué après la séance 14</p>' : ''}`;
+  p2Section.appendChild(entete);
+
+  if (parcours1Complet) {
+    const ol2 = document.createElement("ol");
+    ol2.className = "parcours-liste";
+    DATA.parcours2.forEach((s, i) => {
+      const fait = etat.parcoursFait.includes(s.id);
+      const debloque = fait || i === 0 || etat.parcoursFait.includes(DATA.parcours2[i - 1].id);
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.className = "parcours-item" + (fait ? " fait" : "");
+      b.disabled = !debloque;
+      b.innerHTML = `
+        <span class="parcours-num">${fait ? "✓" : s.num}</span>
+        <span class="parcours-info">
+          <span class="parcours-titre">${s.titre}</span><br>
+          <span class="parcours-meta">${s.duree} min · ${s.objectif}</span>
+        </span>
+        <span class="parcours-etat">${debloque ? "›" : "🔒"}</span>`;
+      if (debloque) b.addEventListener("click", () => ouvrirPrepa("parcours2", s));
+      li.appendChild(b);
+      ol2.appendChild(li);
+    });
+    p2Section.appendChild(ol2);
+  }
 }
 
 /* ============================================================
@@ -498,8 +566,9 @@ function ouvrirPrepa(type, item) {
 
   seanceCourante = { type, item };
   $("#prepaType").textContent =
-    type === "parcours" ? `Parcours · séance ${item.num}` :
-    type === "express" ? "Session express" : "Méditation";
+    type === "parcours"  ? `Parcours · séance ${item.num}` :
+    type === "parcours2" ? `Au quotidien · étape ${item.num}` :
+    type === "express"   ? "Session express" : "Méditation";
   $("#prepaTitre").textContent = item.titre;
   $("#prepaMeta").textContent = `${item.duree} min` + (item.objectif ? ` · ${item.objectif}` : "");
   $("#prepaPedagogie").textContent = item.pedagogie || "";
@@ -685,7 +754,7 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   /* Enregistrement de la séance */
   const dejaFaits = etat.parcoursFait.length;
   etat.historique.push({ date: aujourdHui(), id: item.id, titre: item.titre, minutes });
-  if (type === "parcours" && !anticipe && !etat.parcoursFait.includes(item.id)) {
+  if ((type === "parcours" || type === "parcours2") && !anticipe && !etat.parcoursFait.includes(item.id)) {
     etat.parcoursFait.push(item.id);
   }
   sauver();
@@ -708,13 +777,31 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   } else badgeEl.classList.add("hidden");
 
   /* Prochaine recommandation */
-  const prochaine = prochaineSeanceParcours();
-  $("#finReco").textContent =
-    type === "parcours" && prochaine && etat.parcoursFait.length > dejaFaits
-      ? `Prochaine étape débloquée : séance ${prochaine.num} — ${prochaine.titre}.`
-      : prochaine
-        ? `Votre prochaine étape du parcours : séance ${prochaine.num} — ${prochaine.titre}.`
-        : "Parcours terminé : explorez la pratique libre selon vos états.";
+  const prochaine  = prochaineSeanceParcours();
+  const prochaine2 = prochaineSeanceParcours2();
+  let finRecoTexte;
+  const vientDeTerminer = etat.parcoursFait.length > dejaFaits;
+
+  if (type === "parcours" && vientDeTerminer) {
+    if (prochaine) {
+      finRecoTexte = `Prochaine étape débloquée : séance ${prochaine.num} — ${prochaine.titre}.`;
+    } else if (prochaine2) {
+      finRecoTexte = `Parcours débutant terminé 🎉 Nouveau parcours disponible : "${prochaine2.titre}".`;
+    } else {
+      finRecoTexte = "Tous les parcours terminés — explorez la pratique libre selon vos états.";
+    }
+  } else if (type === "parcours2" && vientDeTerminer) {
+    finRecoTexte = prochaine2
+      ? `Prochaine étape débloquée : ${prochaine2.titre}.`
+      : "Pratique au quotidien terminée — vous savez désormais méditer partout.";
+  } else if (prochaine) {
+    finRecoTexte = `Votre prochaine étape du parcours : séance ${prochaine.num} — ${prochaine.titre}.`;
+  } else if (prochaine2) {
+    finRecoTexte = `Pratique au quotidien disponible : ${prochaine2.titre}.`;
+  } else {
+    finRecoTexte = "Explorez la pratique libre selon vos états.";
+  }
+  $("#finReco").textContent = finRecoTexte;
 
   montrerVue("fin");
 }
@@ -743,11 +830,17 @@ function rendreJournal() {
   const lundiStr = lundi.toISOString().slice(0, 10);
   const minSemaine = etat.historique.filter(e => e.date >= lundiStr).reduce((a, e) => a + e.minutes, 0);
 
+  const p1Faits = etat.parcoursFait.filter(id => DATA.parcours.some(p => p.id === id)).length;
+  const p2Faits = etat.parcoursFait.filter(id => DATA.parcours2.some(p => p.id === id)).length;
+  const statParcours = p1Faits < DATA.parcours.length
+    ? `<div class="stat"><div class="stat-valeur">${p1Faits}/14</div><div class="stat-label">parcours débutant</div></div>`
+    : `<div class="stat"><div class="stat-valeur">${p2Faits}/7</div><div class="stat-label">pratique au quotidien</div></div>`;
+
   $("#statsGrille").innerHTML = `
     <div class="stat"><div class="stat-valeur">${s.sessions}</div><div class="stat-label">séances</div></div>
     <div class="stat"><div class="stat-valeur">${s.minutes} min</div><div class="stat-label">temps total médité</div></div>
     <div class="stat"><div class="stat-valeur">${minSemaine} min</div><div class="stat-label">cette semaine</div></div>
-    <div class="stat"><div class="stat-valeur">${etat.parcoursFait.length}/14</div><div class="stat-label">parcours débutant</div></div>`;
+    ${statParcours}`;
 
   /* Calendrier du mois en cours */
   const cal = $("#calendrier");
