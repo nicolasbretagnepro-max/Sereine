@@ -598,6 +598,80 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   opacity: .6;
 }
 
+/* ---------- Méditation libre (accueil) ---------- */
+.libre-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  background: var(--sauge-pale);
+  border-radius: var(--rayon);
+  text-align: left;
+  transition: background var(--transition), transform var(--transition);
+}
+.libre-btn:active { transform: scale(.98); background: var(--bleu-pale); }
+.libre-icone { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+.libre-info  { flex: 1; display: flex; flex-direction: column; gap: .15rem; }
+.libre-titre { font-size: .95rem; color: var(--encre); font-weight: 600; }
+.libre-sous  { font-size: .8rem; color: var(--encre-2); }
+.libre-fleche { font-size: 1.2rem; color: var(--encre-2); flex-shrink: 0; }
+
+/* ---------- Sélecteur de durée (prepa libre) ---------- */
+.prepa-duree-libre {
+  margin: .6rem 0 .4rem;
+}
+.prepa-duree-label {
+  font-size: .85rem;
+  color: var(--encre-2);
+  margin: 0 0 .55rem;
+}
+.prepa-duree-choix {
+  display: flex;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+.duree-btn {
+  padding: .42rem .85rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--sauge-pale);
+  background: transparent;
+  color: var(--encre-2);
+  font-size: .87rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.duree-btn.actif {
+  background: var(--sauge);
+  border-color: var(--sauge);
+  color: #fff;
+}
+
+/* ---------- Bouton Réinitialiser ---------- */
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.2rem;
+  border-radius: 999px;
+  border: 1.5px solid #e0967a;
+  background: transparent;
+  color: #b8472a;
+  font-size: .87rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: .5rem;
+  transition: background var(--transition), color var(--transition);
+}
+.btn-reset:active { background: #fff0eb; }
+
+[data-theme="sombre"] .btn-reset {
+  color: #f0a080;
+  border-color: #7a3a22;
+}
+[data-theme="sombre"] .btn-reset:active { background: #3a2018; }
+
 /* ---------- Écrans plus larges ---------- */
 @media (min-width: 600px) {
   html { font-size: 17px; }

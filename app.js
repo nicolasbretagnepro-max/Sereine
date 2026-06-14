@@ -24,6 +24,17 @@ const etatDefaut = {
 
 let etat = chargerEtat();
 
+/* Méditation libre : item générique, durée mise à jour dynamiquement */
+const ITEM_LIBRE = {
+  id:         "libre",
+  titre:      "Méditation libre",
+  duree:      10,
+  objectif:   "S'asseoir librement, sans guide ni objectif.",
+  pedagogie:  "Pas d'instructions, pas d'objectif. Installez-vous, fermez les yeux, et soyez simplement là — à votre rythme, pour la durée que vous choisissez.",
+  script:     [[0, "Installez-vous. Fermez les yeux. Respirez librement."]],
+  conclusion: "Belle pratique libre. Vous étiez votre propre guide."
+};
+
 function chargerEtat() {
   try {
     const brut = localStorage.getItem(STORE_KEY);
@@ -256,6 +267,7 @@ function prochaineSeanceParcours() {
 }
 
 function prochaineSeanceParcours2() {
+  if (!DATA.parcours2) return null;
   return DATA.parcours2.find(s => !etat.parcoursFait.includes(s.id)) || null;
 }
 
@@ -351,6 +363,10 @@ function rendreAccueil() {
   /* Ancre du jour */
   rendreAncreDuJour();
 
+  /* Méditation libre */
+  const libreBtn = $("#libreBtn");
+  if (libreBtn) libreBtn.onclick = () => ouvrirPrepa("libre", { ...ITEM_LIBRE });
+
   /* Express */
   const ex = $("#expressListe");
   ex.innerHTML = "";
@@ -404,7 +420,7 @@ function rendreParcours() {
 
   /* ---------- Parcours 2 : Au quotidien ---------- */
   const p2Section = $("#parcours2Section");
-  if (!p2Section) return;
+  if (!p2Section || !DATA.parcours2) return;
   p2Section.innerHTML = "";
 
   const parcours1Complet = DATA.parcours.every(s => etat.parcoursFait.includes(s.id));
@@ -561,20 +577,38 @@ function rendreRecapInstructions(item) {
 }
 
 function ouvrirPrepa(type, item) {
-  /* Les respirations ont leur propre écran dédié */
   if (type === "resp") { lancerSouffle(item); return; }
 
   seanceCourante = { type, item };
   $("#prepaType").textContent =
     type === "parcours"  ? `Parcours · séance ${item.num}` :
     type === "parcours2" ? `Au quotidien · étape ${item.num}` :
-    type === "express"   ? "Session express" : "Méditation";
+    type === "express"   ? "Session express" :
+    type === "libre"     ? "Méditation libre" : "Méditation";
   $("#prepaTitre").textContent = item.titre;
-  $("#prepaMeta").textContent = `${item.duree} min` + (item.objectif ? ` · ${item.objectif}` : "");
+
+  /* Sélecteur de durée : visible uniquement pour la méditation libre */
+  const dureeLibreEl = $("#prepaDureeLibre");
+  const estLibre = type === "libre";
+  if (dureeLibreEl) {
+    dureeLibreEl.classList.toggle("hidden", !estLibre);
+    if (estLibre) {
+      /* Sélectionner la durée mémorisée dans les prefs (ou 10 min par défaut) */
+      const disponibles = [5, 10, 15, 20, 30];
+      const prefDuree   = etat.prefs.duree || 10;
+      const defaut      = disponibles.reduce((p, c) => Math.abs(c - prefDuree) < Math.abs(p - prefDuree) ? c : p);
+      $$(".duree-btn").forEach(b => b.classList.toggle("actif", +b.dataset.duree === defaut));
+      seanceCourante.item = { ...item, duree: defaut };
+    }
+  }
+
+  $("#prepaMeta").textContent = estLibre
+    ? `${seanceCourante.item.duree} min · libre`
+    : `${item.duree} min` + (item.objectif ? ` · ${item.objectif}` : "");
   $("#prepaPedagogie").textContent = item.pedagogie || "";
 
-  // Récap des instructions à lire avant de fermer les yeux
-  rendreRecapInstructions(item);
+  /* Récap des instructions — vide pour la libre (pas de script à lire) */
+  rendreRecapInstructions(estLibre ? { ...item, script: [] } : item);
 
   montrerVue("prepa");
 }
@@ -582,13 +616,14 @@ function ouvrirPrepa(type, item) {
 $("#prepaCommencer").addEventListener("click", () => lancerLecteur(seanceCourante));
 
 /* ---------- Lecteur ---------- */
-const lecteur = { timer: null, ecoule: 0, total: 0, enPause: false, mp3: null };
+const lecteur = { timer: null, ecoule: 0, total: 0, enPause: false, mp3: null, fini: false };
 
 async function lancerLecteur({ item }) {
   const guidage = $("#optGuidage").checked;
   const sons = $("#optSons").checked;
   const volume = $("#optVolume").value / 100;
 
+  lecteur.fini   = false;
   lecteur.ecoule = 0;
   lecteur.total = item.duree * 60;
   lecteur.enPause = false;
@@ -648,9 +683,23 @@ $("#lecteurPause").addEventListener("click", () => {
 });
 
 $("#lecteurQuitter").addEventListener("click", () => {
-  /* Arrêt anticipé : la séance compte quand même (jamais culpabiliser) */
-  if (lecteur.ecoule >= 30) finirLecteur(true);
-  else { stopLecteur(); montrerVue("accueil"); }
+  /* Toujours revenir à l'accueil immédiatement.
+     Si ≥ 30 s pratiquées : son de fin + sauvegarde silencieuse (sans écran de fin). */
+  if (lecteur.fini) return;        // déjà traité (évite double appel)
+  lecteur.fini = true;
+  clearInterval(lecteur.timer);
+  libererWakeLock();
+  if (lecteur.mp3) { lecteur.mp3.pause(); lecteur.mp3 = null; }
+
+  if (lecteur.ecoule >= 30) {
+    try { if (lecteur.sons) bolTibetain(lecteur.volume); } catch { /* ignore */ }
+    try {
+      const minutes = Math.max(1, Math.round(lecteur.ecoule / 60));
+      etat.historique.push({ date: aujourdHui(), id: seanceCourante.item.id, titre: seanceCourante.item.titre, minutes });
+      sauver();
+    } catch { /* ignore */ }
+  }
+  montrerVue("accueil");
 });
 
 function stopLecteur() {
@@ -660,8 +709,9 @@ function stopLecteur() {
 }
 
 function finirLecteur(anticipe = false) {
+  if (lecteur.fini) return;    // évite double déclenchement tick + bouton
+  lecteur.fini = true;
   stopLecteur();
-  // Son de fin : bol tibétain + vibration
   if (lecteur.sons) bolTibetain(lecteur.volume);
   const minutes = Math.max(1, Math.round(lecteur.ecoule / 60));
   ouvrirFin(seanceCourante, minutes, anticipe);
@@ -831,7 +881,9 @@ function rendreJournal() {
   const minSemaine = etat.historique.filter(e => e.date >= lundiStr).reduce((a, e) => a + e.minutes, 0);
 
   const p1Faits = etat.parcoursFait.filter(id => DATA.parcours.some(p => p.id === id)).length;
-  const p2Faits = etat.parcoursFait.filter(id => DATA.parcours2.some(p => p.id === id)).length;
+  const p2Faits = DATA.parcours2
+    ? etat.parcoursFait.filter(id => DATA.parcours2.some(p => p.id === id)).length
+    : 0;
   const statParcours = p1Faits < DATA.parcours.length
     ? `<div class="stat"><div class="stat-valeur">${p1Faits}/14</div><div class="stat-label">parcours débutant</div></div>`
     : `<div class="stat"><div class="stat-valeur">${p2Faits}/7</div><div class="stat-label">pratique au quotidien</div></div>`;
@@ -981,14 +1033,35 @@ function importerProfil(fichier) {
 
 // Branchement des boutons (exécuté une seule fois)
 (function brancherSauvegarde() {
-  const exportBtn  = $("#exportBtn");
+  const exportBtn   = $("#exportBtn");
   const importInput = $("#importInput");
+  const resetBtn    = $("#resetBtn");
+
   if (exportBtn)   exportBtn.addEventListener("click", exporterProfil);
   if (importInput) importInput.addEventListener("change", e => {
     if (e.target.files[0]) importerProfil(e.target.files[0]);
-    e.target.value = ""; // permet de re-sélectionner le même fichier
+    e.target.value = "";
+  });
+  if (resetBtn) resetBtn.addEventListener("click", () => {
+    if (!window.confirm("Effacer toute votre progression ? Cette action est irréversible.")) return;
+    etat = { ...etatDefaut, onboarded: true };
+    sauver();
+    rendreJournal();
+    msgImport("✓ Progression effacée.");
   });
 })();
+
+/* Sélecteur de durée — méditation libre (branché une seule fois au démarrage) */
+$$(".duree-btn").forEach(b => b.addEventListener("click", () => {
+  $$(".duree-btn").forEach(x => x.classList.remove("actif"));
+  b.classList.add("actif");
+  if (seanceCourante?.type === "libre") {
+    const d = +b.dataset.duree;
+    seanceCourante.item = { ...seanceCourante.item, duree: d };
+    etat.prefs.duree    = d;       // mémoriser le choix
+    $("#prepaMeta").textContent = `${d} min · libre`;
+  }
+}));
 
 /* ============================================================
    15. DÉMARRAGE

@@ -116,6 +116,18 @@
         <div id="expressListe" class="express-liste"></div>
       </section>
 
+      <!-- Méditation libre -->
+      <section class="bloc" aria-label="Méditation libre">
+        <button id="libreBtn" class="libre-btn" aria-label="Lancer une méditation libre">
+          <span class="libre-icone" aria-hidden="true">🧘</span>
+          <div class="libre-info">
+            <strong class="libre-titre">Méditation libre</strong>
+            <span class="libre-sous">Durée au choix · sans guide · votre propre pratique</span>
+          </div>
+          <span class="libre-fleche" aria-hidden="true">›</span>
+        </button>
+      </section>
+
       <!-- Rappel d'ancrage -->
       <p id="ancrage" class="ancrage hidden" role="note"></p>
     </main>
@@ -169,6 +181,13 @@
         </div>
         <p id="importMsg" class="import-msg hidden" aria-live="polite"></p>
       </section>
+
+      <!-- Réinitialisation -->
+      <section class="bloc">
+        <h2 class="bloc-titre">Données</h2>
+        <p class="bloc-sous">Toutes vos données sont stockées localement sur cet appareil, rien n'est envoyé à l'extérieur.</p>
+        <button id="resetBtn" class="btn btn-reset">🗑 Effacer ma progression</button>
+      </section>
     </main>
 
     <!-- Vue : PRÉPARATION DE SÉANCE -->
@@ -179,6 +198,18 @@
         <h1 id="prepaTitre" class="prepa-titre"></h1>
         <p id="prepaMeta" class="prepa-meta"></p>
         <p id="prepaPedagogie" class="prepa-pedagogie"></p>
+
+        <!-- Sélecteur de durée : méditation libre uniquement -->
+        <div id="prepaDureeLibre" class="prepa-duree-libre hidden" role="group" aria-label="Durée de la séance">
+          <p class="prepa-duree-label">Durée</p>
+          <div class="prepa-duree-choix">
+            <button class="duree-btn" data-duree="5">5 min</button>
+            <button class="duree-btn actif" data-duree="10">10 min</button>
+            <button class="duree-btn" data-duree="15">15 min</button>
+            <button class="duree-btn" data-duree="20">20 min</button>
+            <button class="duree-btn" data-duree="30">30 min</button>
+          </div>
+        </div>
 
         <!-- Récap des instructions : à lire les yeux ouverts avant de commencer -->
         <div id="prepaInstructions"></div>
