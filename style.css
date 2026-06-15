@@ -489,6 +489,35 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .stat-valeur { font-size: 1.6rem; font-weight: 700; font-family: Georgia, serif; color: var(--sauge-fonce); }
 .stat-label { font-size: .78rem; color: var(--encre-2); }
 
+.progression-parcours { display: flex; flex-direction: column; gap: .7rem; margin-top: .8rem; }
+.progression-item {
+  padding: .95rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--fond-2);
+  box-shadow: var(--carte-ombre);
+}
+.progression-haut {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: .45rem;
+}
+.progression-titre { font-weight: 700; font-size: .92rem; }
+.progression-valeur { color: var(--sauge-fonce); font-weight: 800; font-size: .86rem; }
+.progression-barre {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sauge-pale);
+  overflow: hidden;
+}
+.progression-remplie {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: var(--sauge);
+}
+
 .graph { display: flex; gap: 1.2rem; align-items: flex-end; height: 140px; margin-top: 1rem; padding: 0 .5rem; }
 .graph-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .4rem; height: 100%; justify-content: flex-end; }
 .graph-barre { width: 100%; max-width: 56px; border-radius: 10px 10px 4px 4px; transition: height 1s ease; }

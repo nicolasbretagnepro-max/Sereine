@@ -25,7 +25,7 @@ const etatDefaut = {
   badges: []                    // ids des badges obtenus
 };
 
-let etat = chargerEtat();
+let etat;
 
 /* Méditation libre : item générique, durée mise à jour dynamiquement */
 const ITEM_LIBRE = {
@@ -62,7 +62,16 @@ function chargerEtat() {
       ...legacy.filter(id => /^d\d+/.test(id))
     ])];
 
-    const migre = { ...etatDefaut, ...lu, parcoursModeFait, parcours1Fait, parcours2Fait, parcoursEmotionsFait };
+    const migre = {
+      ...etatDefaut,
+      ...lu,
+      parcoursModeFait,
+      parcours1Fait,
+      parcours2Fait,
+      parcoursEmotionsFait,
+      historique: normaliserHistorique(lu.historique),
+      badges: nettoyerIds(lu.badges, "b")
+    };
     delete migre.parcoursFait;
     return migre;
   } catch { return { ...etatDefaut }; }
@@ -74,9 +83,31 @@ function sauver() {
 /* Petits utilitaires */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
-const aujourdHui = () => new Date().toISOString().slice(0, 10);
+function dateLocaleISO(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+const aujourdHui = () => dateLocaleISO();
 const mn = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const reduitMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function idSession() {
+  return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function entreeHistorique(item, minutes, type = null) {
+  return {
+    sessionId: idSession(),
+    date: aujourdHui(),
+    at: new Date().toISOString(),
+    id: item.id,
+    titre: item.titre,
+    minutes,
+    type
+  };
+}
 
 /* ============================================================
    2. AUDIO — cloches synthétisées (Web Audio API)
@@ -943,7 +974,7 @@ $("#lecteurQuitter").addEventListener("click", () => {
     try { if (lecteur.sons) bolTibetain(lecteur.volume); } catch { /* ignore */ }
     try {
       const minutes = Math.max(1, Math.round(lecteur.ecoule / 60));
-      etat.historique.push({ date: aujourdHui(), id: seanceCourante.item.id, titre: seanceCourante.item.titre, minutes });
+      etat.historique.push(entreeHistorique(seanceCourante.item, minutes, seanceCourante.type));
       sauver();
     } catch { /* ignore */ }
   }
@@ -1068,8 +1099,8 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   $("#finConclusion").textContent = item.conclusion || "";
 
   /* Enregistrement de la séance */
-  const dejaFaits = etat.parcours1Fait.length + etat.parcours2Fait.length;
-  etat.historique.push({ date: aujourdHui(), id: item.id, titre: item.titre, minutes });
+  const dejaFaits = etat.parcoursModeFait.length + etat.parcours1Fait.length + etat.parcours2Fait.length + etat.parcoursEmotionsFait.length;
+  etat.historique.push(entreeHistorique(item, minutes, type));
   if ((type === "parcoursMode" || type === "parcours" || type === "parcours2" || type === "parcoursEmotions") && !anticipe && !seanceFaite(type, item.id)) {
     marquerSeanceFaite(type, item.id);
   }
@@ -1096,7 +1127,7 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   const prochaine  = prochaineSeanceParcours();
   const prochaine2 = prochaineSeanceParcours2();
   let finRecoTexte;
-  const vientDeTerminer = etat.parcours1Fait.length + etat.parcours2Fait.length > dejaFaits;
+  const vientDeTerminer = etat.parcoursModeFait.length + etat.parcours1Fait.length + etat.parcours2Fait.length + etat.parcoursEmotionsFait.length > dejaFaits;
 
   if (type === "parcoursMode" && vientDeTerminer) {
     const suivante = prochaineSeance("parcoursMode");
@@ -1153,7 +1184,7 @@ function rendreJournal() {
   const maintenant = new Date();
   const lundi = new Date(maintenant);
   lundi.setDate(maintenant.getDate() - ((maintenant.getDay() + 6) % 7));
-  const lundiStr = lundi.toISOString().slice(0, 10);
+  const lundiStr = dateLocaleISO(lundi);
   const minSemaine = etat.historique.filter(e => e.date >= lundiStr).reduce((a, e) => a + e.minutes, 0);
 
   const p1Faits = etat.parcours1Fait.length;
@@ -1168,6 +1199,27 @@ function rendreJournal() {
     <div class="stat"><div class="stat-valeur">${s.minutes} min</div><div class="stat-label">temps total médité</div></div>
     <div class="stat"><div class="stat-valeur">${minSemaine} min</div><div class="stat-label">cette semaine</div></div>
     <div class="stat"><div class="stat-valeur">${totalFaits}/${totalEtapes}</div><div class="stat-label">étapes de parcours</div></div>`;
+
+  const progression = $("#progressionParcours");
+  if (progression) {
+    const lignes = [
+      ["Mode d'emploi", modeFaits, DATA.parcoursMode?.length || 0],
+      ["Débutant", p1Faits, DATA.parcours.length],
+      ["Au quotidien", p2Faits, DATA.parcours2?.length || 0],
+      ["Émotions difficiles", emotionsFaits, DATA.parcoursEmotions?.length || 0]
+    ].filter(([, , total]) => total > 0);
+    progression.innerHTML = lignes.map(([titre, fait, total]) => {
+      const pct = Math.min(100, Math.round((fait / total) * 100));
+      return `
+        <div class="progression-item">
+          <div class="progression-haut">
+            <span class="progression-titre">${titre}</span>
+            <span class="progression-valeur">${fait}/${total}</span>
+          </div>
+          <div class="progression-barre"><div class="progression-remplie" style="width:${pct}%"></div></div>
+        </div>`;
+    }).join("");
+  }
 
   /* Calendrier du mois en cours */
   const cal = $("#calendrier");
@@ -1203,7 +1255,7 @@ function rendreJournal() {
  */
 function exporterProfil() {
   const payload = {
-    version: "sereine-v1",
+    version: "sereine-v2",
     exportedAt: new Date().toISOString(),
     etat
   };
@@ -1218,6 +1270,45 @@ function exporterProfil() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+function tableau(src) {
+  return Array.isArray(src) ? src : [];
+}
+
+function nettoyerIds(src, prefix) {
+  const re = new RegExp(`^${prefix}\\d+$`);
+  return [...new Set(tableau(src).filter(id => typeof id === "string" && re.test(id)))];
+}
+
+function normaliserHistorique(src) {
+  return tableau(src)
+    .map(entry => {
+      if (!entry || typeof entry !== "object") return null;
+      const id = typeof entry.id === "string" ? entry.id : null;
+      const titre = typeof entry.titre === "string" ? entry.titre : "Séance";
+      const minutes = Number(entry.minutes);
+      const date = typeof entry.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(entry.date)
+        ? entry.date
+        : aujourdHui();
+      if (!id || !Number.isFinite(minutes) || minutes <= 0) return null;
+      return {
+        sessionId: typeof entry.sessionId === "string" ? entry.sessionId : idSession(),
+        date,
+        at: typeof entry.at === "string" ? entry.at : `${date}T12:00:00.000Z`,
+        id,
+        titre,
+        minutes: Math.max(1, Math.round(minutes)),
+        type: typeof entry.type === "string" ? entry.type : null
+      };
+    })
+    .filter(Boolean);
+}
+
+function cleHistorique(entry) {
+  return entry.sessionId || `${entry.date}|${entry.id}|${entry.minutes}|${entry.titre}|${entry.at}`;
+}
+
+etat = chargerEtat();
 
 /**
  * Affiche un message de retour sous les boutons import/export.
@@ -1246,7 +1337,7 @@ function importerProfil(fichier) {
       const parsed = JSON.parse(evt.target.result);
 
       // Validation de base
-      if (!parsed.version || !parsed.etat) {
+      if (!parsed || typeof parsed !== "object" || !parsed.version || !parsed.etat || typeof parsed.etat !== "object") {
         msgImport("❌ Fichier invalide ou corrompu.", true);
         return;
       }
@@ -1256,16 +1347,19 @@ function importerProfil(fichier) {
         ? new Date(parsed.exportedAt).toLocaleDateString("fr-FR")
         : "date inconnue";
 
-      const nbSeances  = src.historique?.length  ?? 0;
-      const srcParcoursMode = src.parcoursModeFait ?? src.parcoursFait?.filter(id => /^m\d+/.test(id)) ?? [];
-      const srcParcours1 = src.parcours1Fait ?? src.parcoursFait?.filter(id => /^p\d+/.test(id)) ?? [];
-      const srcParcours2 = src.parcours2Fait ?? src.parcoursFait?.filter(id => /^q\d+/.test(id)) ?? [];
-      const srcParcoursEmotions = src.parcoursEmotionsFait ?? src.parcoursFait?.filter(id => /^d\d+/.test(id)) ?? [];
+      const legacyParcours = tableau(src.parcoursFait);
+      const historiqueImporte = normaliserHistorique(src.historique);
+      const nbSeances  = historiqueImporte.length;
+      const srcParcoursMode = nettoyerIds(src.parcoursModeFait ?? legacyParcours, "m");
+      const srcParcours1 = nettoyerIds(src.parcours1Fait ?? legacyParcours, "p");
+      const srcParcours2 = nettoyerIds(src.parcours2Fait ?? legacyParcours, "q");
+      const srcParcoursEmotions = nettoyerIds(src.parcoursEmotionsFait ?? legacyParcours, "d");
       const nbParcoursMode = srcParcoursMode.length;
       const nbParcours1 = srcParcours1.length;
       const nbParcours2 = srcParcours2.length;
       const nbParcoursEmotions = srcParcoursEmotions.length;
-      const nbBadges   = src.badges?.length       ?? 0;
+      const srcBadges = nettoyerIds(src.badges, "b");
+      const nbBadges = srcBadges.length;
 
       const confirme = window.confirm(
         `Importer la sauvegarde du ${dateExport} ?\n\n` +
@@ -1294,16 +1388,16 @@ function importerProfil(fichier) {
       delete fusionne.parcoursFait;
 
       // Badges : union
-      const setBadges = new Set([...(etat.badges ?? []), ...(src.badges ?? [])]);
+      const setBadges = new Set([...(etat.badges ?? []), ...srcBadges]);
       fusionne.badges = [...setBadges];
 
-      // Historique : union sur date+id (dédoublonné), trié par date
+      // Historique : union par sessionId, avec fallback robuste pour les anciens exports.
       const mapHisto = new Map();
-      [...(etat.historique ?? []), ...(src.historique ?? [])].forEach(entry => {
-        const cle = `${entry.date}|${entry.id}`;
+      [...normaliserHistorique(etat.historique), ...historiqueImporte].forEach(entry => {
+        const cle = cleHistorique(entry);
         if (!mapHisto.has(cle)) mapHisto.set(cle, entry);
       });
-      fusionne.historique = [...mapHisto.values()].sort((a, b) => a.date.localeCompare(b.date));
+      fusionne.historique = [...mapHisto.values()].sort((a, b) => (a.at || a.date).localeCompare(b.at || b.date));
 
       // Préférences : celles de l'import priment si définies
       if (src.prefs) fusionne.prefs = { ...fusionne.prefs, ...src.prefs };
@@ -1323,11 +1417,41 @@ function importerProfil(fichier) {
   reader.readAsText(fichier);
 }
 
+function msgAudio(texte, erreur = false) {
+  const el = $("#audioTestMsg");
+  if (!el) return;
+  el.textContent = texte;
+  el.className = "import-msg" + (erreur ? " import-msg-erreur" : " import-msg-ok");
+  el.classList.remove("hidden");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.add("hidden"), 7000);
+}
+
+function testerAudioFin() {
+  const btn = $("#testAudioBtn");
+  try {
+    if (btn) btn.disabled = true;
+    ctxAudio();
+    demarrerKeepAlive();
+    cloche(.45);
+    programmerBol(1.8, .55);
+    msgAudio("Test lancé : vous devez entendre une cloche, puis le bol de fin.");
+    setTimeout(() => {
+      arreterKeepAlive();
+      if (btn) btn.disabled = false;
+    }, 9500);
+  } catch {
+    if (btn) btn.disabled = false;
+    msgAudio("Impossible de lancer le test audio sur ce navigateur.", true);
+  }
+}
+
 // Branchement des boutons (exécuté une seule fois)
 (function brancherSauvegarde() {
   const exportBtn   = $("#exportBtn");
   const importInput = $("#importInput");
   const resetBtn    = $("#resetBtn");
+  const testAudioBtn = $("#testAudioBtn");
 
   if (exportBtn)   exportBtn.addEventListener("click", exporterProfil);
   if (importInput) importInput.addEventListener("change", e => {
@@ -1341,6 +1465,7 @@ function importerProfil(fichier) {
     rendreJournal();
     msgImport("✓ Progression effacée.");
   });
+  if (testAudioBtn) testAudioBtn.addEventListener("click", testerAudioFin);
 })();
 
 /* Sélecteur de durée — méditation libre (branché une seule fois au démarrage) */

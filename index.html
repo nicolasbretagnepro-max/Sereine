@@ -178,6 +178,10 @@
       <header class="entete"><h1 class="titre-vue">Votre progression</h1></header>
       <div class="stats-grille" id="statsGrille"></div>
       <section class="bloc">
+        <h2 class="bloc-titre">Progression par parcours</h2>
+        <div id="progressionParcours" class="progression-parcours"></div>
+      </section>
+      <section class="bloc">
         <h2 class="bloc-titre">Calendrier de pratique</h2>
         <div id="calendrier" class="calendrier"></div>
       </section>
@@ -198,6 +202,13 @@
           </label>
         </div>
         <p id="importMsg" class="import-msg hidden" aria-live="polite"></p>
+      </section>
+
+      <section class="bloc" aria-labelledby="audioTestTitre">
+        <h2 id="audioTestTitre" class="bloc-titre">Son de fin</h2>
+        <p class="bloc-sous">Testez la cloche et le bol de fin avant une séance longue.</p>
+        <button id="testAudioBtn" class="btn btn-secondaire">Tester le son</button>
+        <p id="audioTestMsg" class="import-msg hidden" aria-live="polite"></p>
       </section>
 
       <!-- Réinitialisation -->
