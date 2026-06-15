@@ -1173,8 +1173,92 @@ $("#finTerminer").addEventListener("click", () => {
    ============================================================ */
 function statsGlobales() {
   const minutes = etat.historique.reduce((a, e) => a + e.minutes, 0);
-  const joursDistincts = new Set(etat.historique.map(e => e.date)).size;
-  return { sessions: etat.historique.length, minutes, joursDistincts };
+  const dates = [...new Set(etat.historique.map(e => e.date))].sort();
+  const types = new Set(etat.historique.map(e => e.type || e.id).filter(Boolean));
+  const retourApres = joursRetourMax(dates);
+  return {
+    sessions: etat.historique.length,
+    minutes,
+    joursDistincts: dates.length,
+    parcoursMode: etat.parcoursModeFait.length,
+    parcours1: etat.parcours1Fait.length,
+    parcours2: etat.parcours2Fait.length,
+    parcoursEmotions: etat.parcoursEmotionsFait.length,
+    tousParcours:
+      etat.parcoursModeFait.length >= (DATA.parcoursMode?.length || 0) &&
+      etat.parcours1Fait.length >= DATA.parcours.length &&
+      etat.parcours2Fait.length >= (DATA.parcours2?.length || 0) &&
+      etat.parcoursEmotionsFait.length >= (DATA.parcoursEmotions?.length || 0),
+    respirations: etat.historique.filter(e => e.type === "resp").length,
+    express: etat.historique.filter(e => e.type === "express").length,
+    libres: etat.historique.filter(e => e.type === "libre").length,
+    types: types.size,
+    retour7: retourApres >= 7,
+    retour14: retourApres >= 14,
+    retour30: retourApres >= 30
+  };
+}
+
+function joursRetourMax(dates) {
+  let max = 0;
+  for (let i = 1; i < dates.length; i++) {
+    const precedent = new Date(`${dates[i - 1]}T00:00:00`);
+    const courant = new Date(`${dates[i]}T00:00:00`);
+    const ecart = Math.round((courant - precedent) / 86400000);
+    if (ecart > max) max = ecart;
+  }
+  return max;
+}
+
+function joursPratiquesMois(annee, mois) {
+  const prefix = `${annee}-${String(mois + 1).padStart(2, "0")}-`;
+  return new Set(etat.historique.filter(e => e.date?.startsWith(prefix)).map(e => e.date));
+}
+
+function meilleureSerieDouce(dates) {
+  if (dates.length === 0) return 0;
+  let meilleur = 1;
+  let courant = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const precedent = new Date(`${dates[i - 1]}T00:00:00`);
+    const jour = new Date(`${dates[i]}T00:00:00`);
+    const ecart = Math.round((jour - precedent) / 86400000);
+    if (ecart <= 2) courant++;
+    else courant = 1;
+    if (courant > meilleur) meilleur = courant;
+  }
+  return meilleur;
+}
+
+function formatDateCourte(dateStr) {
+  if (!dateStr) return "";
+  const [annee, mois, jour] = dateStr.split("-").map(Number);
+  return new Date(annee, mois - 1, jour).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+function libelleTypePratique(type) {
+  const labels = {
+    parcoursMode: "Mode d'emploi",
+    parcours: "Débutant",
+    parcours2: "Au quotidien",
+    parcoursEmotions: "Émotions",
+    resp: "Respiration",
+    express: "Express",
+    libre: "Libre",
+    meditation: "État émotionnel"
+  };
+  return labels[type] || "Variée";
+}
+
+function pratiqueLaPlusFrequente(historique) {
+  if (!historique.length) return "—";
+  const comptes = new Map();
+  historique.forEach(e => {
+    const type = e.type || "meditation";
+    comptes.set(type, (comptes.get(type) || 0) + 1);
+  });
+  const [type] = [...comptes.entries()].sort((a, b) => b[1] - a[1])[0];
+  return libelleTypePratique(type);
 }
 
 function rendreJournal() {
@@ -1186,6 +1270,11 @@ function rendreJournal() {
   lundi.setDate(maintenant.getDate() - ((maintenant.getDay() + 6) % 7));
   const lundiStr = dateLocaleISO(lundi);
   const minSemaine = etat.historique.filter(e => e.date >= lundiStr).reduce((a, e) => a + e.minutes, 0);
+  const datesPratique = [...new Set(etat.historique.map(e => e.date))].sort();
+  const joursMois = joursPratiquesMois(maintenant.getFullYear(), maintenant.getMonth());
+  const moyenne = s.sessions ? Math.round(s.minutes / s.sessions) : 0;
+  const derniere = [...etat.historique].sort((a, b) => (b.at || b.date).localeCompare(a.at || a.date))[0] || null;
+  const pratiqueFavorite = pratiqueLaPlusFrequente(etat.historique);
 
   const p1Faits = etat.parcours1Fait.length;
   const p2Faits = DATA.parcours2 ? etat.parcours2Fait.length : 0;
@@ -1199,6 +1288,22 @@ function rendreJournal() {
     <div class="stat"><div class="stat-valeur">${s.minutes} min</div><div class="stat-label">temps total médité</div></div>
     <div class="stat"><div class="stat-valeur">${minSemaine} min</div><div class="stat-label">cette semaine</div></div>
     <div class="stat"><div class="stat-valeur">${totalFaits}/${totalEtapes}</div><div class="stat-label">étapes de parcours</div></div>`;
+
+  const rythme = $("#rythmeDoux");
+  if (rythme) {
+    rythme.innerHTML = `
+      <div class="rythme-carte"><span class="rythme-valeur">${joursMois.size}</span><span class="rythme-label">jour(s) de pratique ce mois-ci</span></div>
+      <div class="rythme-carte"><span class="rythme-valeur">${meilleureSerieDouce(datesPratique)}</span><span class="rythme-label">meilleure période souple</span></div>
+      <div class="rythme-carte large"><span class="rythme-valeur">${datesPratique.includes(aujourdHui()) ? "Déjà fait" : "Disponible"}</span><span class="rythme-label">${datesPratique.includes(aujourdHui()) ? "Votre pratique du jour est là. Revenez seulement si vous en avez envie." : "Une minute suffit pour garder le lien, sans obligation."}</span></div>`;
+  }
+
+  const histo = $("#historiqueRiche");
+  if (histo) {
+    histo.innerHTML = `
+      <div class="historique-carte large"><span class="historique-valeur">${derniere ? derniere.titre : "Aucune séance"}</span><span class="historique-label">${derniere ? `Dernière pratique · ${derniere.minutes} min · ${formatDateCourte(derniere.date)}` : "Votre historique commencera après votre première pratique."}</span></div>
+      <div class="historique-carte"><span class="historique-valeur">${moyenne || "—"}</span><span class="historique-label">minute(s) en moyenne</span></div>
+      <div class="historique-carte"><span class="historique-valeur">${pratiqueFavorite}</span><span class="historique-label">pratique la plus fréquente</span></div>`;
+  }
 
   const progression = $("#progressionParcours");
   if (progression) {

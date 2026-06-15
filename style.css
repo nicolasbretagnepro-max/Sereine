@@ -489,6 +489,35 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .stat-valeur { font-size: 1.6rem; font-weight: 700; font-family: Georgia, serif; color: var(--sauge-fonce); }
 .stat-label { font-size: .78rem; color: var(--encre-2); }
 
+.rythme-doux, .historique-riche {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .8rem;
+  margin-top: .8rem;
+}
+.rythme-carte, .historique-carte {
+  padding: 1rem;
+  border-radius: var(--rayon);
+  background: var(--fond-2);
+  box-shadow: var(--carte-ombre);
+}
+.rythme-valeur, .historique-valeur {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sauge-fonce);
+  line-height: 1.2;
+}
+.rythme-label, .historique-label {
+  display: block;
+  margin-top: .25rem;
+  color: var(--encre-2);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+.rythme-carte.large, .historique-carte.large { grid-column: 1 / -1; }
+
 .progression-parcours { display: flex; flex-direction: column; gap: .7rem; margin-top: .8rem; }
 .progression-item {
   padding: .95rem 1rem;
