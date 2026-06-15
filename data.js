@@ -31,7 +31,7 @@ const DATA = {
     {
       id: "p1", num: 1, titre: "Découvrir la méditation", duree: 3,
       objectif: "Faire une première expérience simple, sans pression.",
-      pedagogie: "La méditation n'est pas faire le vide dans sa tête. C'est s'entraîner à remarquer ce qui se passe — une respiration, un son, une pensée — sans chercher à le changer. Aujourd'hui, vous découvrez simplement la posture et le principe.",
+      pedagogie: "La méditation n'est pas faire le vide dans sa tête. Aujourd'hui, vous apprenez le geste de base : vous poser, sentir la respiration, remarquer quand l'esprit part, puis revenir sans vous juger. Si vous pensez beaucoup pendant la séance, ce n'est pas raté : c'est exactement le terrain d'entraînement.",
       script: [
         [0, "Bienvenue dans votre première séance. Installez-vous confortablement, assis, le dos droit mais détendu."],
         [15, "Vous pouvez fermer les yeux, ou simplement baisser le regard."],
@@ -48,7 +48,7 @@ const DATA = {
     {
       id: "p2", num: 2, titre: "Observer sa respiration", duree: 4,
       objectif: "Utiliser la respiration comme point d'ancrage de l'attention.",
-      pedagogie: "La respiration est l'ancre du méditant : toujours disponible, toujours dans le présent. On ne la contrôle pas, on l'observe — sa température, son rythme, les mouvements qu'elle crée dans le corps.",
+      pedagogie: "La respiration sert d'ancre parce qu'elle est toujours là, même dans une journée chargée. Le but n'est pas de mieux respirer ni de respirer profondément : c'est d'apprendre à sentir un détail concret, comme l'air aux narines ou le ventre qui bouge. Dans le quotidien, ce repère vous aidera à revenir au présent en quelques secondes.",
       script: [
         [0, "Installez-vous. Dos droit, épaules relâchées, mains posées sur les cuisses."],
         [15, "Fermez les yeux. Prenez deux grandes respirations pour vous poser."],
@@ -66,7 +66,7 @@ const DATA = {
     {
       id: "p3", num: 3, titre: "Comprendre les distractions", duree: 5,
       objectif: "Découvrir que se distraire fait partie de la méditation.",
-      pedagogie: "Un esprit qui vagabonde n'est pas un esprit qui échoue : c'est un esprit qui fonctionne. Le moment où vous remarquez la distraction est précisément le moment de pleine conscience. C'est une réussite, pas une erreur.",
+      pedagogie: "Aujourd'hui, vous n'essayez pas de rester concentré sans interruption. Vous entraînez le moment précis où vous remarquez que l'esprit est parti, puis où vous revenez. Si cela arrive 20 fois, ce n'est pas 20 échecs : c'est 20 répétitions utiles. Ce geste servira ensuite au travail, en conversation ou face à une émotion.",
       script: [
         [0, "Installez-vous et fermez les yeux. Prenez une grande respiration."],
         [20, "Posez votre attention sur le souffle, à l'endroit que vous avez choisi hier."],
@@ -84,7 +84,7 @@ const DATA = {
     {
       id: "p4", num: 4, titre: "Ramener son attention", duree: 5,
       objectif: "S'entraîner activement au retour de l'attention.",
-      pedagogie: "Ramener l'attention est LE geste mental de la méditation. Plus vous le répétez, plus il devient naturel — pendant la séance, puis dans la vie : en réunion, en conversation, au volant.",
+      pedagogie: "Ramener l'attention est le vrai mouvement de la méditation. Vous allez probablement partir dans des pensées, des sons ou des sensations : le progrès consiste à revenir avec simplicité, sans commentaire intérieur. Dans la vie, ce même retour permet de reprendre le fil avant de répondre trop vite, de ruminer ou de s'éparpiller.",
       script: [
         [0, "Asseyez-vous confortablement. Fermez les yeux."],
         [15, "Trois grandes respirations pour arriver ici, maintenant."],
@@ -101,7 +101,7 @@ const DATA = {
     {
       id: "p5", num: 5, titre: "Observer son corps", duree: 6,
       objectif: "Découvrir le scan corporel et élargir l'attention au corps.",
-      pedagogie: "Le corps vit dans le présent — contrairement à l'esprit qui voyage entre passé et futur. Parcourir le corps avec attention apaise le système nerveux et révèle des tensions qu'on ne remarquait plus.",
+      pedagogie: "Le corps donne des informations très concrètes : tension dans la mâchoire, épaules hautes, ventre serré, fatigue dans les yeux. Cette séance vous apprend à écouter ces signaux avant qu'ils ne deviennent trop forts. Si vous ne sentez presque rien, restez simple : contact avec le sol, poids du corps, chaleur ou fraîcheur suffisent.",
       script: [
         [0, "Installez-vous, assis ou allongé. Fermez les yeux."],
         [20, "Trois respirations profondes pour vous déposer."],
@@ -119,7 +119,7 @@ const DATA = {
     {
       id: "p6", num: 6, titre: "Comprendre les émotions", duree: 7,
       objectif: "Observer les émotions comme des sensations dans le corps.",
-      pedagogie: "Une émotion est d'abord un événement corporel : gorge serrée, poitrine lourde, chaleur au visage. L'observer dans le corps plutôt que dans le mental crée une distance précieuse : vous avez une émotion, vous n'êtes pas cette émotion.",
+      pedagogie: "Une émotion se manifeste souvent dans le corps avant de devenir une histoire dans la tête : gorge serrée, poitrine lourde, chaleur, agitation. Vous allez apprendre à la sentir sans la nourrir par le scénario. Si l'émotion devient trop forte, revenez aux pieds, ouvrez les yeux, et choisissez une sensation neutre : la sécurité passe avant la performance.",
       script: [
         [0, "Installez-vous. Fermez les yeux. Quelques respirations profondes."],
         [30, "Posez l'attention sur le souffle, une minute, pour stabiliser l'esprit."],
@@ -137,7 +137,7 @@ const DATA = {
     {
       id: "p7", num: 7, titre: "Accueillir les pensées", duree: 7,
       objectif: "Observer les pensées sans s'y accrocher ni les chasser.",
-      pedagogie: "On ne peut pas empêcher les pensées d'apparaître — pas plus qu'on n'empêche le cœur de battre. Mais on peut choisir de ne pas monter dans chaque train de pensée qui passe en gare.",
+      pedagogie: "Les pensées vont apparaître toutes seules : listes de choses à faire, souvenirs, jugements, anticipations. La pratique consiste à les reconnaître comme des événements mentaux, pas comme des ordres à suivre. Vous n'avez pas besoin de les chasser : vous pouvez simplement voir 'une pensée est là' et revenir au souffle.",
       script: [
         [0, "Asseyez-vous, fermez les yeux, posez-vous avec trois grandes respirations."],
         [30, "Stabilisez l'attention sur le souffle pendant un moment."],
@@ -154,7 +154,7 @@ const DATA = {
     {
       id: "p8", num: 8, titre: "Développer sa concentration", duree: 8,
       objectif: "Affiner et prolonger l'attention sur un objet unique.",
-      pedagogie: "La concentration se cultive comme l'endurance : par répétition progressive. Compter ses respirations donne à l'esprit une tâche simple qui révèle immédiatement les distractions — et muscle le retour.",
+      pedagogie: "La concentration se construit par petites séries, comme une endurance douce. Compter les respirations donne à l'esprit une tâche simple : si vous perdez le compte, vous venez de voir que l'attention est partie. Reprendre à un n'est pas recommencer à zéro, c'est renforcer la capacité à revenir.",
       script: [
         [0, "Installez-vous, dos droit, et fermez les yeux."],
         [20, "Trois respirations amples. Puis laissez le souffle naturel revenir."],
@@ -172,7 +172,7 @@ const DATA = {
     {
       id: "p9", num: 9, titre: "Cultiver le calme", duree: 8,
       objectif: "Allonger l'expiration pour activer la détente physiologique.",
-      pedagogie: "Expirer plus longtemps qu'on inspire stimule le système nerveux parasympathique — celui du repos. C'est un levier physiologique direct : le calme ne se décrète pas, mais il se respire.",
+      pedagogie: "Quand l'expiration devient plus longue que l'inspiration, le corps reçoit souvent un signal d'apaisement. Vous n'avez pas à vous forcer au calme : vous allez créer les conditions pour qu'il arrive. Cette technique est utile les yeux ouverts, avant un message difficile, une réunion ou un moment de tension.",
       script: [
         [0, "Installez-vous confortablement. Relâchez les épaules, la mâchoire."],
         [25, "Observez d'abord votre respiration naturelle, sans rien changer."],
@@ -189,7 +189,7 @@ const DATA = {
     {
       id: "p10", num: 10, titre: "La pleine conscience au quotidien", duree: 9,
       objectif: "Étendre l'attention aux sons, au corps et à l'instant ordinaire.",
-      pedagogie: "La méditation ne sert pas à être bon en méditation : elle sert à vivre plus présent. L'attention ouverte — accueillir sons, sensations et pensées sans en choisir — est le pont entre le coussin et la vraie vie.",
+      pedagogie: "La méditation ne sert pas à devenir bon pendant une séance, mais à être plus présent dans la vraie vie. Aujourd'hui, vous élargissez l'attention : sons, corps, souffle, pensées peuvent être là ensemble. C'est le pont vers les gestes ordinaires : marcher, manger, écouter quelqu'un, attendre sans sortir automatiquement le téléphone.",
       script: [
         [0, "Asseyez-vous. Fermez les yeux. Trois grandes respirations."],
         [30, "Stabilisez-vous une minute sur le souffle."],
@@ -207,7 +207,7 @@ const DATA = {
     {
       id: "p11", num: 11, titre: "Réagir au stress", duree: 10,
       objectif: "Apprendre la pause STOP pour répondre au lieu de réagir.",
-      pedagogie: "Entre un stimulus et votre réaction, il existe un espace. La méthode STOP — S'arrêter, Take a breath (respirer), Observer, Poursuivre — élargit cet espace. C'est la méditation appliquée aux moments difficiles.",
+      pedagogie: "Le stress pousse à réagir vite : répondre, fuir, contrôler, s'agacer. La méthode STOP crée une pause praticable en vraie vie : s'arrêter, respirer, observer ce qui se passe, puis choisir la suite. On commence avec une situation légère pour entraîner l'outil sans se mettre en difficulté.",
       script: [
         [0, "Installez-vous. Fermez les yeux. Posez-vous avec quelques respirations."],
         [40, "Stabilisez l'attention sur le souffle, deux minutes."],
@@ -225,7 +225,7 @@ const DATA = {
     {
       id: "p12", num: 12, titre: "Développer la bienveillance", duree: 10,
       objectif: "Découvrir la méditation de bienveillance (metta).",
-      pedagogie: "La bienveillance se muscle comme l'attention. Formuler des souhaits sincères — pour soi, puis pour les autres — modifie durablement notre rapport à nous-même et réduit l'autocritique, ce carburant silencieux du stress.",
+      pedagogie: "La bienveillance n'est pas se convaincre que tout va bien. C'est apprendre à se parler sans se durcir, surtout quand on est fatigué, stressé ou déçu. Si les phrases semblent artificielles, ce n'est pas un problème : dites-les doucement, comme une direction, pas comme une obligation d'y croire tout de suite.",
       script: [
         [0, "Installez-vous confortablement. Fermez les yeux. Respirez tranquillement."],
         [40, "Posez une main sur votre cœur, si vous le souhaitez."],
@@ -244,7 +244,7 @@ const DATA = {
     {
       id: "p13", num: 13, titre: "Méditer de façon autonome", duree: 12,
       objectif: "Pratiquer avec un guidage minimal, en autonomie.",
-      pedagogie: "Vous connaissez maintenant tous les outils : l'ancre du souffle, le retour, le scan corporel, l'attention ouverte. Cette séance est volontairement peu guidée : c'est vous qui pilotez, le silence devient votre allié.",
+      pedagogie: "Vous avez maintenant plusieurs options : souffle, corps, sons, pensées, attention ouverte. Cette séance vous apprend à choisir votre point d'appui et à pratiquer avec moins de guidage. Si vous vous sentez perdu, revenez à la règle la plus simple : sentir une respiration, puis la suivante.",
       script: [
         [0, "Installez-vous. Vous connaissez la posture : digne et détendue."],
         [30, "Choisissez votre ancre : le souffle, le corps, ou les sons."],
@@ -260,7 +260,7 @@ const DATA = {
     {
       id: "p14", num: 14, titre: "Construire une pratique durable", duree: 12,
       objectif: "Consolider l'habitude et définir sa pratique pour la suite.",
-      pedagogie: "Une pratique durable repose sur trois piliers : un déclencheur fixe (après le café, avant le coucher), une durée réaliste (mieux vaut 5 minutes tenues que 20 minutes abandonnées), et de la souplesse (rater un jour n'efface rien).",
+      pedagogie: "Une pratique durable doit être facile à retrouver. Elle repose sur un déclencheur clair, une durée honnête et une grande souplesse : mieux vaut 5 minutes régulières que 20 minutes idéales mais abandonnées. Aujourd'hui, vous choisissez comment faire entrer la méditation dans une vraie journée, pas dans une journée parfaite.",
       script: [
         [0, "Installez-vous pour cette dernière séance du parcours. Fermez les yeux."],
         [30, "Commencez par ce que vous préférez : souffle, corps ou sons. Deux minutes."],

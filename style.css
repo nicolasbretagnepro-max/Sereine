@@ -56,7 +56,7 @@ h1, h2, .hero-titre, .ob-title, .prepa-titre, .fin-titre {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   font-weight: 600;
   line-height: 1.25;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .hidden { display: none !important; }
@@ -103,7 +103,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 
 /* ---------- Typo utilitaires ---------- */
 .eyebrow {
-  font-size: .78rem; text-transform: uppercase; letter-spacing: .12em;
+  font-size: .78rem; text-transform: uppercase; letter-spacing: 0;
   color: var(--sauge-fonce); font-weight: 700;
 }
 .bloc-titre { font-size: 1.15rem; margin-bottom: .3rem; }
@@ -272,6 +272,92 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 }
 
 /* ---------- Parcours ---------- */
+.parcours-sections { display: flex; flex-direction: column; gap: 1.2rem; }
+.parcours-section {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.parcours-section + .parcours-section { margin-top: .3rem; }
+.parcours-section-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.parcours-progression {
+  flex: 0 0 auto;
+  padding: .25rem .65rem;
+  border-radius: 999px;
+  background: var(--sauge-pale);
+  color: var(--sauge-fonce);
+  font-size: .78rem;
+  font-weight: 700;
+}
+.parcours-prochaine {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: var(--rayon);
+  background: linear-gradient(135deg, var(--sauge-pale), var(--bleu-pale));
+  text-align: left;
+  box-shadow: var(--carte-ombre);
+  transition: transform var(--transition), opacity var(--transition);
+}
+.parcours-prochaine:active { transform: scale(.98); }
+.parcours-prochaine:disabled { opacity: .6; box-shadow: none; }
+.parcours-prochaine-label {
+  color: var(--sauge-fonce);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.parcours-prochaine-titre {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.parcours-prochaine-meta {
+  color: var(--encre-2);
+  font-size: .84rem;
+}
+.parcours-prochaine-objectif {
+  margin-top: .2rem;
+  color: var(--encre);
+  font-size: .9rem;
+  line-height: 1.45;
+}
+.parcours-details {
+  border-radius: var(--rayon);
+  background: var(--fond-2);
+  box-shadow: var(--carte-ombre);
+  overflow: hidden;
+}
+.parcours-details summary {
+  padding: .9rem 1.1rem;
+  color: var(--sauge-fonce);
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.parcours-details summary::-webkit-details-marker { display: none; }
+.parcours-details summary::after {
+  content: "›";
+  font-size: 1.2rem;
+  transition: transform .3s ease;
+}
+.parcours-details[open] summary::after { transform: rotate(90deg); }
+.parcours-details .parcours-liste {
+  padding: 0 1rem 1rem;
+}
 .parcours-liste { list-style: none; display: flex; flex-direction: column; gap: .8rem; }
 
 .parcours-item {
@@ -438,7 +524,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   max-width: 440px; margin: 0 auto; width: 100%; padding: 1rem 1.6rem;
   display: flex; flex-direction: column; align-items: center; gap: 1.4rem;
 }
-.lecteur-titre { font-size: .95rem; font-weight: 700; color: var(--encre-2); letter-spacing: .04em; }
+.lecteur-titre { font-size: .95rem; font-weight: 700; color: var(--encre-2); letter-spacing: 0; }
 
 .lecteur-halo {
   width: 170px; height: 170px; border-radius: 50%;
@@ -573,11 +659,9 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   font-style: italic;
 }
 
-/* ---------- Parcours 2 : section Au quotidien ---------- */
+/* ---------- Sections de parcours ---------- */
 .parcours-section-entete {
-  margin: 1.6rem 0 .6rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid var(--sauge-pale);
+  margin: .2rem 0 0;
 }
 .parcours-section-titre {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;

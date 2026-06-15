@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="style.css">
   <!-- Icônes & PWA -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -72,7 +72,7 @@
     <main id="vue-accueil" class="vue" tabindex="-1">
       <header class="entete">
         <div class="entete-gauche">
-          <img src="assets/icons/icon-192.png" alt="Sereine" class="logo-spirale" onerror="this.style.display='none'">
+          <img src="icon-192.png" alt="Sereine" class="logo-spirale" onerror="this.style.display='none'">
           <div>
             <p id="salutation" class="eyebrow">Bonjour</p>
             <h1 class="titre-accueil">Votre moment à vous</h1>
@@ -132,16 +132,11 @@
       <p id="ancrage" class="ancrage hidden" role="note"></p>
     </main>
 
-    <!-- Vue : PARCOURS -->
+      <!-- Vue : PARCOURS -->
     <main id="vue-parcours" class="vue hidden" tabindex="-1">
       <header class="entete"><h1 class="titre-vue">Parcours</h1></header>
-      <p class="vue-intro">Deux parcours indépendants, chacun à votre rythme. Les séances se débloquent une à une.</p>
-      <div class="parcours-section-entete">
-        <h2 class="parcours-section-titre">Débutant</h2>
-        <p class="parcours-section-sous">Construire une pratique solide · 14 séances</p>
-      </div>
-      <ol id="parcoursListe" class="parcours-liste"></ol>
-      <div id="parcours2Section"></div>
+      <p class="vue-intro">Deux façons de pratiquer : apprendre les bases, puis faire entrer la méditation dans les gestes ordinaires.</p>
+      <div id="parcoursSections" class="parcours-sections"></div>
     </main>
 
     <!-- Vue : RESPIRATION (liste) -->

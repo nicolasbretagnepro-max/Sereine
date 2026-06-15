@@ -16,7 +16,8 @@ const etatDefaut = {
   onboarded: false,
   prefs: { objectif: null, duree: 5, moment: null },
   theme: null,                  // null = suit le système
-  parcoursFait: [],             // ids des séances du parcours terminées
+  parcours1Fait: [],            // ids des séances du parcours débutant terminées
+  parcours2Fait: [],            // ids des pratiques au quotidien terminées
   historique: [],               // { date, id, titre, minutes, stress, energie, humeur }
   humeurJour: null,             // { date: "YYYY-MM-DD", id }
   badges: []                    // ids des badges obtenus
@@ -38,7 +39,22 @@ const ITEM_LIBRE = {
 function chargerEtat() {
   try {
     const brut = localStorage.getItem(STORE_KEY);
-    return brut ? Object.assign({}, etatDefaut, JSON.parse(brut)) : { ...etatDefaut };
+    if (!brut) return { ...etatDefaut };
+
+    const lu = JSON.parse(brut);
+    const legacy = Array.isArray(lu.parcoursFait) ? lu.parcoursFait : [];
+    const parcours1Fait = [...new Set([
+      ...(Array.isArray(lu.parcours1Fait) ? lu.parcours1Fait : []),
+      ...legacy.filter(id => /^p\d+/.test(id))
+    ])];
+    const parcours2Fait = [...new Set([
+      ...(Array.isArray(lu.parcours2Fait) ? lu.parcours2Fait : []),
+      ...legacy.filter(id => /^q\d+/.test(id))
+    ])];
+
+    const migre = { ...etatDefaut, ...lu, parcours1Fait, parcours2Fait };
+    delete migre.parcoursFait;
+    return migre;
   } catch { return { ...etatDefaut }; }
 }
 function sauver() {
@@ -361,12 +377,30 @@ function lancerOnboarding() {
    5. MOTEUR DE RECOMMANDATION
    ============================================================ */
 function prochaineSeanceParcours() {
-  return DATA.parcours.find(s => !etat.parcoursFait.includes(s.id)) || null;
+  return DATA.parcours.find(s => !etat.parcours1Fait.includes(s.id)) || null;
 }
 
 function prochaineSeanceParcours2() {
   if (!DATA.parcours2) return null;
-  return DATA.parcours2.find(s => !etat.parcoursFait.includes(s.id)) || null;
+  return DATA.parcours2.find(s => !etat.parcours2Fait.includes(s.id)) || null;
+}
+
+function progressionPour(type) {
+  return type === "parcours2" ? etat.parcours2Fait : etat.parcours1Fait;
+}
+
+function seanceFaite(type, id) {
+  return progressionPour(type).includes(id);
+}
+
+function marquerSeanceFaite(type, id) {
+  const liste = progressionPour(type);
+  if (!liste.includes(id)) liste.push(id);
+}
+
+function estDebloquee(type, liste, index) {
+  const faits = progressionPour(type);
+  return index === 0 || faits.includes(liste[index - 1].id) || faits.includes(liste[index].id);
 }
 
 /** Retrouve un contenu jouable par type + id. */
@@ -436,7 +470,7 @@ function rendreAccueil() {
   $("#salutation").textContent = h < 5 ? "Bonne nuit" : h < 12 ? "Bonjour" : h < 18 ? "Bon après-midi" : "Bonsoir";
 
   /* Héros : progression parcours 1 + recommandation */
-  const p1Faits = etat.parcoursFait.filter(id => DATA.parcours.some(s => s.id === id)).length;
+  const p1Faits = etat.parcours1Fait.length;
   const prochaine = prochaineSeanceParcours();
   $("#heroNum").textContent = prochaine ? prochaine.num : 14;
   const circ = 2 * Math.PI * 52;
@@ -495,62 +529,84 @@ function rendreAccueil() {
    7. VUE PARCOURS
    ============================================================ */
 function rendreParcours() {
-  const ol = $("#parcoursListe");
-  ol.innerHTML = "";
-  DATA.parcours.forEach((s, i) => {
-    const fait = etat.parcoursFait.includes(s.id);
-    const debloque = fait || i === 0 || etat.parcoursFait.includes(DATA.parcours[i - 1].id);
+  const cont = $("#parcoursSections");
+  if (!cont) return;
+  cont.innerHTML = "";
+
+  cont.appendChild(sectionParcours({
+    type: "parcours",
+    titre: "Débutant",
+    promesse: "Apprendre les bases et construire une pratique solide.",
+    meta: "14 séances · 3 à 12 min",
+    liste: DATA.parcours,
+    faits: etat.parcours1Fait,
+    labelProchaine: "Prochaine séance"
+  }));
+
+  if (DATA.parcours2) {
+    cont.appendChild(sectionParcours({
+      type: "parcours2",
+      titre: "Au quotidien",
+      promesse: "Faire entrer la pleine conscience dans les gestes ordinaires.",
+      meta: "7 pratiques · 2 à 5 min · yeux ouverts",
+      liste: DATA.parcours2,
+      faits: etat.parcours2Fait,
+      labelProchaine: "Prochaine pratique"
+    }));
+  }
+}
+
+function sectionParcours({ type, titre, promesse, meta, liste, faits, labelProchaine }) {
+  const section = document.createElement("section");
+  section.className = "parcours-section";
+  const prochaine = liste.find(s => !faits.includes(s.id)) || liste[liste.length - 1];
+  const termine = faits.length >= liste.length;
+  const index = liste.findIndex(s => s.id === prochaine.id);
+  const debloque = termine || estDebloquee(type, liste, index);
+
+  section.innerHTML = `
+    <div class="parcours-section-entete">
+      <div>
+        <h2 class="parcours-section-titre">${titre}</h2>
+        <p class="parcours-section-sous">${promesse}</p>
+      </div>
+      <span class="parcours-progression">${Math.min(faits.length, liste.length)}/${liste.length}</span>
+    </div>
+    <button class="parcours-prochaine${termine ? " fait" : ""}" ${debloque ? "" : "disabled"}>
+      <span class="parcours-prochaine-label">${termine ? "Parcours terminé" : labelProchaine}</span>
+      <span class="parcours-prochaine-titre">${prochaine.titre}</span>
+      <span class="parcours-prochaine-meta">${meta} · ${prochaine.duree} min</span>
+      <span class="parcours-prochaine-objectif">${termine ? "Vous pouvez refaire cette étape ou choisir une pratique libre." : prochaine.objectif}</span>
+    </button>
+    <details class="parcours-details">
+      <summary>Toutes les étapes</summary>
+      <ol class="parcours-liste"></ol>
+    </details>`;
+
+  const bouton = section.querySelector(".parcours-prochaine");
+  if (debloque) bouton.addEventListener("click", () => ouvrirPrepa(type, prochaine));
+
+  const ol = section.querySelector(".parcours-liste");
+  liste.forEach((s, i) => {
+    const fait = seanceFaite(type, s.id);
+    const itemDebloque = fait || estDebloquee(type, liste, i);
     const li = document.createElement("li");
     const b = document.createElement("button");
     b.className = "parcours-item" + (fait ? " fait" : "");
-    b.disabled = !debloque;
+    b.disabled = !itemDebloque;
     b.innerHTML = `
       <span class="parcours-num">${fait ? "✓" : s.num}</span>
       <span class="parcours-info">
         <span class="parcours-titre">${s.titre}</span><br>
         <span class="parcours-meta">${s.duree} min · ${s.objectif}</span>
       </span>
-      <span class="parcours-etat">${debloque ? "›" : "🔒"}</span>`;
-    if (debloque) b.addEventListener("click", () => ouvrirPrepa("parcours", s));
+      <span class="parcours-etat">${itemDebloque ? "›" : "🔒"}</span>`;
+    if (itemDebloque) b.addEventListener("click", () => ouvrirPrepa(type, s));
     li.appendChild(b);
     ol.appendChild(li);
   });
 
-  /* ---------- Parcours 2 : Au quotidien ---------- */
-  const p2Section = $("#parcours2Section");
-  if (!p2Section || !DATA.parcours2) return;
-  p2Section.innerHTML = "";
-
-  const p2Faits = etat.parcoursFait.filter(id => DATA.parcours2.some(s => s.id === id)).length;
-
-  const entete = document.createElement("div");
-  entete.className = "parcours-section-entete";
-  entete.innerHTML = `
-    <h2 class="parcours-section-titre">Au quotidien</h2>
-    <p class="parcours-section-sous">La pleine conscience dans la vie ordinaire · 7 étapes${p2Faits > 0 ? ` · ${p2Faits}/7` : ""}</p>`;
-  p2Section.appendChild(entete);
-
-  const ol2 = document.createElement("ol");
-  ol2.className = "parcours-liste";
-  DATA.parcours2.forEach((s, i) => {
-    const fait = etat.parcoursFait.includes(s.id);
-    const debloque = fait || i === 0 || etat.parcoursFait.includes(DATA.parcours2[i - 1].id);
-    const li = document.createElement("li");
-    const b = document.createElement("button");
-    b.className = "parcours-item" + (fait ? " fait" : "");
-    b.disabled = !debloque;
-    b.innerHTML = `
-      <span class="parcours-num">${fait ? "✓" : s.num}</span>
-      <span class="parcours-info">
-        <span class="parcours-titre">${s.titre}</span><br>
-        <span class="parcours-meta">${s.duree} min · ${s.objectif}</span>
-      </span>
-      <span class="parcours-etat">${debloque ? "›" : "🔒"}</span>`;
-    if (debloque) b.addEventListener("click", () => ouvrirPrepa("parcours2", s));
-    li.appendChild(b);
-    ol2.appendChild(li);
-  });
-  p2Section.appendChild(ol2);
+  return section;
 }
 
 /* ============================================================
@@ -929,10 +985,10 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   $("#finConclusion").textContent = item.conclusion || "";
 
   /* Enregistrement de la séance */
-  const dejaFaits = etat.parcoursFait.length;
+  const dejaFaits = etat.parcours1Fait.length + etat.parcours2Fait.length;
   etat.historique.push({ date: aujourdHui(), id: item.id, titre: item.titre, minutes });
-  if ((type === "parcours" || type === "parcours2") && !anticipe && !etat.parcoursFait.includes(item.id)) {
-    etat.parcoursFait.push(item.id);
+  if ((type === "parcours" || type === "parcours2") && !anticipe && !seanceFaite(type, item.id)) {
+    marquerSeanceFaite(type, item.id);
   }
   sauver();
 
@@ -957,7 +1013,7 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   const prochaine  = prochaineSeanceParcours();
   const prochaine2 = prochaineSeanceParcours2();
   let finRecoTexte;
-  const vientDeTerminer = etat.parcoursFait.length > dejaFaits;
+  const vientDeTerminer = etat.parcours1Fait.length + etat.parcours2Fait.length > dejaFaits;
 
   if (type === "parcours" && vientDeTerminer) {
     if (prochaine) {
@@ -1007,10 +1063,8 @@ function rendreJournal() {
   const lundiStr = lundi.toISOString().slice(0, 10);
   const minSemaine = etat.historique.filter(e => e.date >= lundiStr).reduce((a, e) => a + e.minutes, 0);
 
-  const p1Faits = etat.parcoursFait.filter(id => DATA.parcours.some(p => p.id === id)).length;
-  const p2Faits = DATA.parcours2
-    ? etat.parcoursFait.filter(id => DATA.parcours2.some(p => p.id === id)).length
-    : 0;
+  const p1Faits = etat.parcours1Fait.length;
+  const p2Faits = DATA.parcours2 ? etat.parcours2Fait.length : 0;
   const statParcours = p1Faits < DATA.parcours.length
     ? `<div class="stat"><div class="stat-valeur">${p1Faits}/14</div><div class="stat-label">parcours débutant</div></div>`
     : `<div class="stat"><div class="stat-valeur">${p2Faits}/7</div><div class="stat-label">pratique au quotidien</div></div>`;
@@ -1109,13 +1163,17 @@ function importerProfil(fichier) {
         : "date inconnue";
 
       const nbSeances  = src.historique?.length  ?? 0;
-      const nbParcours = src.parcoursFait?.length ?? 0;
+      const srcParcours1 = src.parcours1Fait ?? src.parcoursFait?.filter(id => /^p\d+/.test(id)) ?? [];
+      const srcParcours2 = src.parcours2Fait ?? src.parcoursFait?.filter(id => /^q\d+/.test(id)) ?? [];
+      const nbParcours1 = srcParcours1.length;
+      const nbParcours2 = srcParcours2.length;
       const nbBadges   = src.badges?.length       ?? 0;
 
       const confirme = window.confirm(
         `Importer la sauvegarde du ${dateExport} ?\n\n` +
         `• ${nbSeances} séance(s) dans l'historique\n` +
-        `• ${nbParcours}/14 étape(s) du parcours\n` +
+        `• ${nbParcours1}/14 étape(s) du parcours débutant\n` +
+        `• ${nbParcours2}/7 pratique(s) au quotidien\n` +
         `• ${nbBadges} badge(s)\n\n` +
         `Vos données actuelles seront fusionnées avec cette sauvegarde.`
       );
@@ -1124,9 +1182,12 @@ function importerProfil(fichier) {
       // Fusion : on part des données actuelles et on complète avec l'import
       const fusionne = { ...etatDefaut, ...etat };
 
-      // Parcours : union des ids complétés
-      const setParcours = new Set([...(etat.parcoursFait ?? []), ...(src.parcoursFait ?? [])]);
-      fusionne.parcoursFait = [...setParcours];
+      // Parcours : union des ids complétés, avec compatibilité anciens exports
+      const setParcours1 = new Set([...(etat.parcours1Fait ?? []), ...srcParcours1]);
+      const setParcours2 = new Set([...(etat.parcours2Fait ?? []), ...srcParcours2]);
+      fusionne.parcours1Fait = [...setParcours1];
+      fusionne.parcours2Fait = [...setParcours2];
+      delete fusionne.parcoursFait;
 
       // Badges : union
       const setBadges = new Set([...(etat.badges ?? []), ...(src.badges ?? [])]);
@@ -1149,7 +1210,7 @@ function importerProfil(fichier) {
       sauver();
       appliquerTheme();
       rendreJournal();
-      msgImport(`✓ Profil importé (${nbSeances} séances, ${nbParcours} étapes du parcours).`);
+      msgImport(`✓ Profil importé (${nbSeances} séances, ${nbParcours1 + nbParcours2} étapes de parcours).`);
 
     } catch {
       msgImport("❌ Erreur de lecture — fichier corrompu ?", true);
