@@ -26,6 +26,156 @@ const DATA = {
     "Recommencer aujourd'hui est déjà une victoire."
   ],
 
+  /* ---------- GUIDE : COMMENT MÉDITER ---------- */
+  commentMediter: [
+    {
+      icone: "1",
+      titre: "S'installer",
+      texte: "Choisissez une chaise, un coussin ou un bord de lit. Le plus important n'est pas d'avoir une posture parfaite, mais une posture stable, assez confortable pour rester quelques minutes sans lutter."
+    },
+    {
+      icone: "2",
+      titre: "Placer le corps",
+      texte: "Posez les pieds au sol ou les jambes sur le coussin. Laissez le bassin porter le poids du corps. Le dos est droit sans être raide, les épaules relâchées, les mains simplement posées."
+    },
+    {
+      icone: "3",
+      titre: "Choisir le regard",
+      texte: "Vous pouvez fermer les yeux ou garder le regard bas, flou, posé devant vous. Si vous somnolez, ouvrez légèrement les yeux. Si vous êtes très agité, les fermer peut aider à réduire les stimulations."
+    },
+    {
+      icone: "4",
+      titre: "Trouver le souffle",
+      texte: "Ne cherchez pas à mieux respirer. Repérez seulement un endroit où le souffle se sent clairement : narines, poitrine ou ventre. Cet endroit devient votre point de retour."
+    },
+    {
+      icone: "5",
+      titre: "Gérer les pensées",
+      texte: "Les pensées vont venir. Le but n'est pas de les supprimer. Quand vous remarquez que vous êtes parti dans une pensée, dites intérieurement 'pensée', puis revenez à une respiration."
+    },
+    {
+      icone: "6",
+      titre: "Savoir si c'est juste",
+      texte: "Une bonne séance n'est pas forcément calme. Une bonne séance est une séance où vous avez remarqué ce qui se passait, puis où vous êtes revenu. Le retour est le vrai entraînement."
+    }
+  ],
+
+  /* ---------- PARCOURS MODE D'EMPLOI : 8 BASES ---------- */
+  parcoursMode: [
+    {
+      id: "m1", num: 1, titre: "S'asseoir sans se compliquer", duree: 3,
+      objectif: "Trouver une posture stable, simple et réaliste.",
+      pedagogie: "Avant de méditer longtemps, il faut savoir s'installer. La posture n'est pas une performance : elle sert à rester présent sans se battre avec le corps. Une chaise suffit parfaitement.",
+      script: [
+        [0, "Asseyez-vous sur une chaise, un coussin ou un bord de lit."],
+        [20, "Sentez les points de contact : pieds, jambes, bassin, mains."],
+        [45, "Laissez le dos se redresser sans le durcir. Comme si vous étiez disponible, pas militaire."],
+        [80, "Relâchez les épaules, la mâchoire, le ventre autant que possible."],
+        [120, "Restez là. Stable, simple, vivant."],
+        [160, "La posture n'a pas besoin d'être parfaite. Elle a seulement besoin de vous soutenir."]
+      ],
+      conclusion: "Vous savez maintenant vous installer. C'est la première porte de la méditation."
+    },
+    {
+      id: "m2", num: 2, titre: "Yeux ouverts ou fermés", duree: 3,
+      objectif: "Choisir le regard adapté à son état du moment.",
+      pedagogie: "Fermer les yeux peut aider à se poser, mais ce n'est pas obligatoire. Garder les yeux entrouverts, regard bas et doux, aide souvent quand on somnole ou quand on veut rester présent au monde.",
+      script: [
+        [0, "Installez-vous. Essayez d'abord les yeux ouverts, le regard bas, sans fixer."],
+        [30, "Voyez les formes et la lumière sans les commenter."],
+        [65, "Maintenant, si vous le souhaitez, fermez les yeux."],
+        [95, "Remarquez la différence : plus d'intériorité, peut-être plus de pensées aussi."],
+        [135, "Choisissez ce qui vous aide aujourd'hui : yeux fermés ou regard ouvert."],
+        [165, "Il n'y a pas de bonne option définitive. Il y a l'option juste maintenant."]
+      ],
+      conclusion: "Vous pouvez adapter le regard selon votre énergie, votre fatigue et votre environnement."
+    },
+    {
+      id: "m3", num: 3, titre: "Trouver son ancre", duree: 4,
+      objectif: "Choisir l'endroit du souffle le plus facile à sentir.",
+      pedagogie: "Le souffle devient plus utile quand il est concret. On ne suit pas une idée de respiration : on sent une sensation précise, aux narines, dans la poitrine ou dans le ventre.",
+      script: [
+        [0, "Laissez la respiration naturelle. Ne la corrigez pas."],
+        [25, "Sentez d'abord l'air aux narines : frais quand il entre, plus tiède quand il sort."],
+        [70, "Puis la poitrine : un mouvement discret, parfois très léger."],
+        [115, "Puis le ventre : il se soulève et redescend, ou presque pas."],
+        [160, "Choisissez l'endroit le plus net aujourd'hui."],
+        [205, "Restez avec cet endroit. Une respiration, puis la suivante."]
+      ],
+      conclusion: "Votre ancre n'est pas théorique : c'est une sensation précise à laquelle revenir."
+    },
+    {
+      id: "m4", num: 4, titre: "Le vrai cycle", duree: 4,
+      objectif: "Comprendre le cycle attention, distraction, retour.",
+      pedagogie: "La méditation ne consiste pas à rester concentré sans faille. Le cycle réel est : je pose l'attention, je pars, je m'en rends compte, je reviens. Ce cycle est la pratique.",
+      script: [
+        [0, "Posez l'attention sur votre ancre de souffle."],
+        [30, "À un moment, l'esprit partira. Laissez cela arriver."],
+        [70, "Dès que vous le remarquez, dites simplement : parti."],
+        [105, "Puis revenez au souffle, sans vous expliquer pourquoi vous êtes parti."],
+        [150, "Encore : souffle, distraction possible, retour."],
+        [205, "Chaque retour est une répétition. Vous êtes en train d'apprendre."]
+      ],
+      conclusion: "Si vous revenez, vous méditez. Même si vous revenez cent fois."
+    },
+    {
+      id: "m5", num: 5, titre: "Que faire des pensées", duree: 5,
+      objectif: "Observer les pensées sans les suivre ni les combattre.",
+      pedagogie: "Les pensées ne sont pas un obstacle à éliminer. Elles deviennent un problème seulement quand on les suit automatiquement. Les nommer doucement crée de l'espace.",
+      script: [
+        [0, "Installez-vous et sentez le souffle."],
+        [35, "Quand une pensée apparaît, ne cherchez pas à la finir."],
+        [75, "Nommez-la simplement : pensée, souvenir, liste, inquiétude."],
+        [125, "Puis revenez à une sensation du souffle."],
+        [180, "Si la même pensée revient, nommez-la de nouveau. Pas besoin de gagner contre elle."],
+        [240, "Vous apprenez à voir la pensée sans monter dedans."]
+      ],
+      conclusion: "Une pensée vue comme pensée perd déjà un peu de son pouvoir."
+    },
+    {
+      id: "m6", num: 6, titre: "Quand le corps gêne", duree: 5,
+      objectif: "Distinguer inconfort normal et ajustement nécessaire.",
+      pedagogie: "Méditer ne veut pas dire supporter inutilement. Une gêne légère peut être observée. Une douleur ou une tension trop forte demande un ajustement calme. La lucidité vaut mieux que la rigidité.",
+      script: [
+        [0, "Sentez votre posture telle qu'elle est."],
+        [35, "Repérez une zone confortable ou neutre : mains, pieds, contact du siège."],
+        [85, "Repérez maintenant une éventuelle gêne, sans vous crisper autour."],
+        [135, "Si elle est légère, observez sa forme, sa température, son mouvement."],
+        [190, "Si elle est trop forte, ajustez doucement la posture. Cela fait partie de la pratique."],
+        [250, "Revenez à une zone simple : souffle, pieds, mains."]
+      ],
+      conclusion: "Le corps n'est pas un ennemi de la méditation. Il est l'endroit où elle commence."
+    },
+    {
+      id: "m7", num: 7, titre: "Quand une émotion monte", duree: 5,
+      objectif: "Revenir au corps sans se laisser aspirer par l'histoire.",
+      pedagogie: "Une émotion difficile vient souvent avec un scénario. La pratique consiste à revenir à la sensation : gorge, poitrine, ventre, chaleur, agitation. Si c'est trop fort, on revient à une zone neutre.",
+      script: [
+        [0, "Installez-vous. Sentez les pieds ou le contact du siège."],
+        [35, "Demandez-vous doucement : qu'est-ce qui est là maintenant ?"],
+        [80, "Si une émotion apparaît, cherchez son empreinte dans le corps."],
+        [135, "Ne cherchez pas à l'expliquer. Sentez seulement : pression, chaleur, tension, mouvement."],
+        [200, "Si c'est trop intense, revenez aux pieds, ouvrez les yeux, regardez autour de vous."],
+        [260, "Vous pouvez être avec vous-même sans vous forcer."]
+      ],
+      conclusion: "Face aux émotions, la méditation commence par la sécurité et la douceur."
+    },
+    {
+      id: "m8", num: 8, titre: "Finir et revenir à sa journée", duree: 4,
+      objectif: "Terminer une séance sans repartir trop vite.",
+      pedagogie: "La fin compte autant que le début. Revenir trop brusquement peut donner l'impression que la méditation reste séparée de la vie. On apprend à rouvrir, bouger, puis emporter une respiration dans la journée.",
+      script: [
+        [0, "Restez encore quelques respirations avec votre ancre."],
+        [40, "Sentez le corps entier assis ici."],
+        [80, "Bougez légèrement les doigts, les épaules, la nuque."],
+        [120, "Si les yeux étaient fermés, rouvrez-les doucement."],
+        [165, "Avant de terminer, choisissez une respiration à refaire plus tard aujourd'hui."],
+        [210, "La séance se termine. La pratique peut continuer dans un geste ordinaire."]
+      ],
+      conclusion: "Vous avez le mode d'emploi. Le reste se construit en pratiquant, doucement."
+    }
+  ],
+
   /* ---------- PARCOURS DÉBUTANT : 14 SÉANCES ---------- */
   parcours: [
     {
@@ -375,6 +525,126 @@ const DATA = {
         [285, "Quelques instants encore."]
       ],
       conclusion: "Vous savez méditer. La pratique, désormais, est entièrement vôtre."
+    }
+  ],
+
+  /* ---------- PARCOURS ÉMOTIONS DIFFICILES ---------- */
+  parcoursEmotions: [
+    {
+      id: "d1", num: 1, titre: "Nommer ce qui est là", duree: 4,
+      objectif: "Reconnaître une émotion sans la juger ni la fuir.",
+      pedagogie: "Nommer une émotion n'est pas l'analyser. C'est sortir du flou : stress, peur, colère, tristesse, fatigue, surcharge. Mettre un mot simple aide à créer un peu d'espace.",
+      script: [
+        [0, "Installez-vous. Posez les deux pieds au sol ou sentez le contact du siège."],
+        [30, "Respirez naturellement. Pas besoin de vous calmer tout de suite."],
+        [70, "Demandez-vous : qu'est-ce qui est présent en moi maintenant ?"],
+        [115, "Cherchez un mot simple : stress, peur, colère, tristesse, fatigue, agitation."],
+        [165, "Si aucun mot ne vient, dites simplement : quelque chose est là."],
+        [210, "Revenez aux pieds, au souffle, au corps assis."]
+      ],
+      conclusion: "Nommer, c'est déjà reprendre contact avec soi."
+    },
+    {
+      id: "d2", num: 2, titre: "Revenir au corps", duree: 5,
+      objectif: "Observer l'émotion comme une sensation physique.",
+      pedagogie: "Une émotion devient plus maniable quand on la sent dans le corps plutôt que de la nourrir par des explications. On cherche l'empreinte corporelle : gorge, poitrine, ventre, mâchoire, mains.",
+      script: [
+        [0, "Installez-vous et sentez vos appuis."],
+        [35, "Pensez à l'émotion présente, juste assez pour la reconnaître."],
+        [80, "Où se manifeste-t-elle dans le corps ? Gorge, poitrine, ventre, visage, mains ?"],
+        [140, "Observez la sensation : taille, forme, intensité, mouvement."],
+        [205, "Respirez autour de cette zone, sans chercher à la faire disparaître."],
+        [265, "Revenez aux pieds. Le corps est là, maintenant."]
+      ],
+      conclusion: "Vous pouvez sentir une émotion sans devenir cette émotion."
+    },
+    {
+      id: "d3", num: 3, titre: "Stress : créer une pause", duree: 5,
+      objectif: "Utiliser une pause simple avant de réagir.",
+      pedagogie: "Le stress pousse à accélérer. La pratique consiste à insérer une petite pause : s'arrêter, respirer, observer, puis choisir la suite. Même quinze secondes peuvent changer la qualité d'une réponse.",
+      script: [
+        [0, "Pensez à une situation légèrement stressante, pas la plus difficile."],
+        [35, "Première étape : stop. Vous vous arrêtez ici."],
+        [75, "Deuxième étape : une respiration lente. Inspirez, puis expirez plus longuement."],
+        [125, "Troisième étape : observez. Corps, pensées, envie d'agir vite."],
+        [185, "Quatrième étape : demandez-vous quelle serait la prochaine action utile."],
+        [245, "Lâchez la situation. Revenez au souffle."]
+      ],
+      conclusion: "Le stress ne disparaît pas toujours, mais vous avez créé un espace pour répondre."
+    },
+    {
+      id: "d4", num: 4, titre: "Anxiété : revenir aux sens", duree: 5,
+      objectif: "Sortir du futur mental en revenant au présent sensoriel.",
+      pedagogie: "L'anxiété parle souvent du futur : et si, et si, et si. Les sens ramènent à ce qui se passe réellement maintenant. Ce n'est pas magique, mais c'est un point d'appui fiable.",
+      script: [
+        [0, "Ouvrez ou gardez les yeux ouverts si cela vous aide."],
+        [30, "Nommez trois choses que vous voyez, sans les commenter."],
+        [75, "Écoutez deux sons, proches ou lointains."],
+        [120, "Sentez un contact : pieds, vêtement, mains, siège."],
+        [170, "Suivez deux respirations naturelles."],
+        [225, "Demandez-vous : à cette seconde précise, qu'est-ce qui est là ?"]
+      ],
+      conclusion: "Les sens sont une porte simple pour revenir du futur vers maintenant."
+    },
+    {
+      id: "d5", num: 5, titre: "Colère : sensation, pas scénario", duree: 6,
+      objectif: "Distinguer l'énergie de la colère et l'histoire qui l'alimente.",
+      pedagogie: "La colère peut signaler quelque chose d'important, mais elle s'amplifie quand on rejoue la scène. Ici, on observe l'énergie dans le corps avant de décider quoi faire.",
+      script: [
+        [0, "Sentez vos appuis. Si vous préférez, pratiquez debout."],
+        [35, "Expirez une fois par la bouche, longuement."],
+        [75, "Repérez où la colère vit dans le corps : mâchoire, poitrine, poings, ventre."],
+        [135, "Restez avec la sensation brute. Pas la scène, pas les phrases. La sensation."],
+        [210, "Si l'histoire revient, notez : histoire. Puis revenez au corps."],
+        [285, "Demandez-vous : que faudra-t-il écouter plus tard, à froid ?"],
+        [335, "Revenez au souffle, aux pieds, à la pièce."]
+      ],
+      conclusion: "La colère peut contenir un message. Vous pourrez l'écouter mieux quand le corps sera redescendu."
+    },
+    {
+      id: "d6", num: 6, titre: "Tristesse : se tenir compagnie", duree: 6,
+      objectif: "Accueillir la tristesse avec douceur, sans s'y abandonner.",
+      pedagogie: "La tristesse demande souvent moins de solution que de présence. Méditer avec elle, c'est rester proche de soi sans se raconter que tout doit aller bien.",
+      script: [
+        [0, "Installez-vous dans une posture douce, pas trop affaissée."],
+        [40, "Posez une main sur le cœur ou sur le ventre, si c'est confortable."],
+        [85, "Sentez la présence de la main. Chaleur, pression, contact."],
+        [140, "Dites intérieurement : c'est difficile, et je peux rester avec moi."],
+        [210, "Laissez venir une respiration simple, sans forcer l'apaisement."],
+        [285, "Regardez s'il existe une zone neutre dans le corps, même petite."],
+        [340, "Restez encore quelques instants avec douceur."]
+      ],
+      conclusion: "La douceur n'efface pas tout, mais elle évite de vous abandonner dans ce que vous traversez."
+    },
+    {
+      id: "d7", num: 7, titre: "Surcharge : une chose à la fois", duree: 5,
+      objectif: "Réduire la dispersion quand tout semble trop plein.",
+      pedagogie: "Quand l'esprit est saturé, il veut tout résoudre d'un coup. La méditation aide à revenir à une seule chose : une respiration, un geste, une prochaine action.",
+      script: [
+        [0, "Asseyez-vous. Posez les mains sur les cuisses ou sur une table."],
+        [35, "Sentez le contact des mains. C'est votre point d'appui."],
+        [80, "Laissez la liste mentale être là, sans la dérouler."],
+        [130, "Revenez aux mains. Une sensation précise."],
+        [185, "Demandez-vous : quelle est la prochaine action, une seule ?"],
+        [240, "Ne faites pas encore cette action. Respirez d'abord une fois avec elle."]
+      ],
+      conclusion: "Quand tout déborde, revenir à une seule chose est déjà une forme de clarté."
+    },
+    {
+      id: "d8", num: 8, titre: "Choisir sa réponse", duree: 7,
+      objectif: "Passer de la réaction automatique à une réponse plus consciente.",
+      pedagogie: "La méditation ne supprime pas les émotions. Elle aide à ne pas leur laisser toutes les commandes. Après avoir senti, nommé et respiré, on peut choisir une réponse plus juste.",
+      script: [
+        [0, "Installez-vous. Sentez vos appuis et votre respiration."],
+        [45, "Faites venir une situation émotionnelle modérée."],
+        [100, "Nommez l'émotion principale, simplement."],
+        [150, "Sentez son empreinte dans le corps."],
+        [215, "Demandez-vous : quelle réaction automatique voudrait partir maintenant ?"],
+        [280, "Puis demandez-vous : quelle réponse serait plus utile, plus digne, plus claire ?"],
+        [350, "Revenez au souffle. Vous n'avez pas besoin d'agir tout de suite."],
+        [395, "Gardez seulement cette possibilité : je peux choisir ma réponse."]
+      ],
+      conclusion: "Vous avez construit une chaîne complète : nommer, sentir, respirer, choisir."
     }
   ],
 

@@ -16,8 +16,10 @@ const etatDefaut = {
   onboarded: false,
   prefs: { objectif: null, duree: 5, moment: null },
   theme: null,                  // null = suit le système
+  parcoursModeFait: [],         // ids des séances mode d'emploi terminées
   parcours1Fait: [],            // ids des séances du parcours débutant terminées
   parcours2Fait: [],            // ids des pratiques au quotidien terminées
+  parcoursEmotionsFait: [],     // ids du parcours émotions difficiles terminés
   historique: [],               // { date, id, titre, minutes, stress, energie, humeur }
   humeurJour: null,             // { date: "YYYY-MM-DD", id }
   badges: []                    // ids des badges obtenus
@@ -43,6 +45,10 @@ function chargerEtat() {
 
     const lu = JSON.parse(brut);
     const legacy = Array.isArray(lu.parcoursFait) ? lu.parcoursFait : [];
+    const parcoursModeFait = [...new Set([
+      ...(Array.isArray(lu.parcoursModeFait) ? lu.parcoursModeFait : []),
+      ...legacy.filter(id => /^m\d+/.test(id))
+    ])];
     const parcours1Fait = [...new Set([
       ...(Array.isArray(lu.parcours1Fait) ? lu.parcours1Fait : []),
       ...legacy.filter(id => /^p\d+/.test(id))
@@ -51,8 +57,12 @@ function chargerEtat() {
       ...(Array.isArray(lu.parcours2Fait) ? lu.parcours2Fait : []),
       ...legacy.filter(id => /^q\d+/.test(id))
     ])];
+    const parcoursEmotionsFait = [...new Set([
+      ...(Array.isArray(lu.parcoursEmotionsFait) ? lu.parcoursEmotionsFait : []),
+      ...legacy.filter(id => /^d\d+/.test(id))
+    ])];
 
-    const migre = { ...etatDefaut, ...lu, parcours1Fait, parcours2Fait };
+    const migre = { ...etatDefaut, ...lu, parcoursModeFait, parcours1Fait, parcours2Fait, parcoursEmotionsFait };
     delete migre.parcoursFait;
     return migre;
   } catch { return { ...etatDefaut }; }
@@ -289,10 +299,12 @@ function montrerVue(nom) {
   if (nom === "respiration") rendreRespiration();
   if (nom === "biblio") rendreBiblio();
   if (nom === "journal") rendreJournal();
+  if (nom === "guide") rendreGuideMediter();
 }
 
 $$(".nav-item").forEach(b => b.addEventListener("click", () => montrerVue(b.dataset.vue)));
 $$("[data-retour]").forEach(b => b.addEventListener("click", () => montrerVue("accueil")));
+$$("[data-retour-parcours]").forEach(b => b.addEventListener("click", () => montrerVue("parcours")));
 
 /* ---------- Thème ---------- */
 function appliquerTheme() {
@@ -376,17 +388,32 @@ function lancerOnboarding() {
 /* ============================================================
    5. MOTEUR DE RECOMMANDATION
    ============================================================ */
+function progressionPour(type) {
+  if (type === "parcoursMode") return etat.parcoursModeFait;
+  if (type === "parcours2") return etat.parcours2Fait;
+  if (type === "parcoursEmotions") return etat.parcoursEmotionsFait;
+  return etat.parcours1Fait;
+}
+
+function listePour(type) {
+  if (type === "parcoursMode") return DATA.parcoursMode || [];
+  if (type === "parcours2") return DATA.parcours2 || [];
+  if (type === "parcoursEmotions") return DATA.parcoursEmotions || [];
+  return DATA.parcours || [];
+}
+
+function prochaineSeance(type) {
+  const liste = listePour(type);
+  const faits = progressionPour(type);
+  return liste.find(s => !faits.includes(s.id)) || null;
+}
+
 function prochaineSeanceParcours() {
-  return DATA.parcours.find(s => !etat.parcours1Fait.includes(s.id)) || null;
+  return prochaineSeance("parcours");
 }
 
 function prochaineSeanceParcours2() {
-  if (!DATA.parcours2) return null;
-  return DATA.parcours2.find(s => !etat.parcours2Fait.includes(s.id)) || null;
-}
-
-function progressionPour(type) {
-  return type === "parcours2" ? etat.parcours2Fait : etat.parcours1Fait;
+  return prochaineSeance("parcours2");
 }
 
 function seanceFaite(type, id) {
@@ -405,8 +432,10 @@ function estDebloquee(type, liste, index) {
 
 /** Retrouve un contenu jouable par type + id. */
 function trouverContenu(type, id) {
+  if (type === "parcoursMode") return { type, item: id ? listePour(type).find(s => s.id === id) : prochaineSeance(type) };
   if (type === "parcours")  return { type, item: id ? DATA.parcours.find(s => s.id === id) : prochaineSeanceParcours() };
   if (type === "parcours2") return { type, item: id ? DATA.parcours2.find(s => s.id === id) : prochaineSeanceParcours2() };
+  if (type === "parcoursEmotions") return { type, item: id ? listePour(type).find(s => s.id === id) : prochaineSeance(type) };
   if (type === "express")   return { type, item: DATA.express.find(s => s.id === id) };
   if (type === "resp")      return { type, item: DATA.respiration.find(r => r.id === id) };
   if (type === "emotion")   return { type: "meditation", item: DATA.emotions.find(e => e.id === id)?.meditation };
@@ -423,6 +452,12 @@ function recommandation() {
     const [type, id] = r.sugg[0];
     const c = trouverContenu(type, id);
     if (c?.item) return { ...c, raison: r.msg };
+  }
+
+  // Nouveau départ recommandé : comprendre concrètement comment méditer
+  const prochaineMode = prochaineSeance("parcoursMode");
+  if (prochaineMode) {
+    return { type: "parcoursMode", item: prochaineMode, raison: "Apprendre concrètement comment méditer." };
   }
 
   // Prochaine séance du parcours 1
@@ -478,12 +513,16 @@ function rendreAccueil() {
 
   const reco = recommandation();
   $("#heroEyebrow").textContent =
+    reco.type === "parcoursMode" ? "Mode d'emploi" :
     reco.type === "parcours"  ? "Votre prochaine étape" :
+    reco.type === "parcoursEmotions" ? "Émotions difficiles" :
     reco.type === "parcours2" ? "Pratique au quotidien" : "Recommandé pour vous";
   $("#heroTitre").textContent = reco.item.titre;
   $("#heroMeta").textContent =
+    reco.type === "parcoursMode" ? `Base ${reco.item.num} · ${reco.item.duree} min` :
     reco.type === "parcours"  ? `Séance ${reco.item.num} · ${reco.item.duree} min` :
     reco.type === "parcours2" ? `Étape ${reco.item.num} · ${reco.item.duree} min` :
+    reco.type === "parcoursEmotions" ? `Étape ${reco.item.num} · ${reco.item.duree} min` :
     reco.type === "resp"      ? `Respiration · ${reco.item.duree} min` :
     `${reco.item.duree} min`;
   $("#heroBtn").onclick = () => ouvrirPrepa(reco.type, reco.item);
@@ -533,6 +572,19 @@ function rendreParcours() {
   if (!cont) return;
   cont.innerHTML = "";
 
+  const guideBtn = $("#guideMediterBtn");
+  if (guideBtn) guideBtn.onclick = () => montrerVue("guide");
+
+  cont.appendChild(sectionParcours({
+    type: "parcoursMode",
+    titre: "Mode d'emploi",
+    promesse: "Savoir exactement quoi faire : posture, souffle, pensées, émotions.",
+    meta: "8 bases · 3 à 6 min",
+    liste: DATA.parcoursMode,
+    faits: etat.parcoursModeFait,
+    labelProchaine: "Prochaine base"
+  }));
+
   cont.appendChild(sectionParcours({
     type: "parcours",
     titre: "Débutant",
@@ -552,6 +604,18 @@ function rendreParcours() {
       liste: DATA.parcours2,
       faits: etat.parcours2Fait,
       labelProchaine: "Prochaine pratique"
+    }));
+  }
+
+  if (DATA.parcoursEmotions) {
+    cont.appendChild(sectionParcours({
+      type: "parcoursEmotions",
+      titre: "Émotions difficiles",
+      promesse: "Traverser stress, anxiété, colère ou tristesse sans se laisser emporter.",
+      meta: "8 séances · 4 à 7 min",
+      liste: DATA.parcoursEmotions,
+      faits: etat.parcoursEmotionsFait,
+      labelProchaine: "Prochaine séance"
     }));
   }
 }
@@ -607,6 +671,23 @@ function sectionParcours({ type, titre, promesse, meta, liste, faits, labelProch
   });
 
   return section;
+}
+
+function rendreGuideMediter() {
+  const cont = $("#guideMediterContenu");
+  if (!cont || !DATA.commentMediter) return;
+  cont.innerHTML = "";
+  DATA.commentMediter.forEach(point => {
+    const article = document.createElement("article");
+    article.className = "guide-point";
+    article.innerHTML = `
+      <span class="guide-point-icone" aria-hidden="true">${point.icone}</span>
+      <div>
+        <h2>${point.titre}</h2>
+        <p>${point.texte}</p>
+      </div>`;
+    cont.appendChild(article);
+  });
 }
 
 /* ============================================================
@@ -731,8 +812,10 @@ function ouvrirPrepa(type, item) {
 
   seanceCourante = { type, item };
   $("#prepaType").textContent =
+    type === "parcoursMode" ? `Mode d'emploi · base ${item.num}` :
     type === "parcours"  ? `Parcours · séance ${item.num}` :
     type === "parcours2" ? `Au quotidien · étape ${item.num}` :
+    type === "parcoursEmotions" ? `Émotions difficiles · étape ${item.num}` :
     type === "express"   ? "Session express" :
     type === "libre"     ? "Méditation libre" : "Méditation";
   $("#prepaTitre").textContent = item.titre;
@@ -987,7 +1070,7 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   /* Enregistrement de la séance */
   const dejaFaits = etat.parcours1Fait.length + etat.parcours2Fait.length;
   etat.historique.push({ date: aujourdHui(), id: item.id, titre: item.titre, minutes });
-  if ((type === "parcours" || type === "parcours2") && !anticipe && !seanceFaite(type, item.id)) {
+  if ((type === "parcoursMode" || type === "parcours" || type === "parcours2" || type === "parcoursEmotions") && !anticipe && !seanceFaite(type, item.id)) {
     marquerSeanceFaite(type, item.id);
   }
   sauver();
@@ -1015,7 +1098,12 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
   let finRecoTexte;
   const vientDeTerminer = etat.parcours1Fait.length + etat.parcours2Fait.length > dejaFaits;
 
-  if (type === "parcours" && vientDeTerminer) {
+  if (type === "parcoursMode" && vientDeTerminer) {
+    const suivante = prochaineSeance("parcoursMode");
+    finRecoTexte = suivante
+      ? `Prochaine base débloquée : ${suivante.titre}.`
+      : "Mode d'emploi terminé — vous pouvez avancer dans le parcours débutant avec des repères solides.";
+  } else if (type === "parcours" && vientDeTerminer) {
     if (prochaine) {
       finRecoTexte = `Prochaine étape débloquée : séance ${prochaine.num} — ${prochaine.titre}.`;
     } else if (prochaine2) {
@@ -1027,6 +1115,11 @@ function ouvrirFin({ type, item }, minutes, anticipe) {
     finRecoTexte = prochaine2
       ? `Prochaine étape débloquée : ${prochaine2.titre}.`
       : "Pratique au quotidien terminée — vous savez désormais méditer partout.";
+  } else if (type === "parcoursEmotions" && vientDeTerminer) {
+    const suivante = prochaineSeance("parcoursEmotions");
+    finRecoTexte = suivante
+      ? `Prochaine étape débloquée : ${suivante.titre}.`
+      : "Parcours émotions difficiles terminé — gardez ces outils pour les moments où ça déborde.";
   } else if (prochaine) {
     finRecoTexte = `Votre prochaine étape du parcours : séance ${prochaine.num} — ${prochaine.titre}.`;
   } else if (prochaine2) {
@@ -1065,15 +1158,16 @@ function rendreJournal() {
 
   const p1Faits = etat.parcours1Fait.length;
   const p2Faits = DATA.parcours2 ? etat.parcours2Fait.length : 0;
-  const statParcours = p1Faits < DATA.parcours.length
-    ? `<div class="stat"><div class="stat-valeur">${p1Faits}/14</div><div class="stat-label">parcours débutant</div></div>`
-    : `<div class="stat"><div class="stat-valeur">${p2Faits}/7</div><div class="stat-label">pratique au quotidien</div></div>`;
+  const modeFaits = DATA.parcoursMode ? etat.parcoursModeFait.length : 0;
+  const emotionsFaits = DATA.parcoursEmotions ? etat.parcoursEmotionsFait.length : 0;
+  const totalEtapes = (DATA.parcoursMode?.length || 0) + DATA.parcours.length + (DATA.parcours2?.length || 0) + (DATA.parcoursEmotions?.length || 0);
+  const totalFaits = modeFaits + p1Faits + p2Faits + emotionsFaits;
 
   $("#statsGrille").innerHTML = `
     <div class="stat"><div class="stat-valeur">${s.sessions}</div><div class="stat-label">séances</div></div>
     <div class="stat"><div class="stat-valeur">${s.minutes} min</div><div class="stat-label">temps total médité</div></div>
     <div class="stat"><div class="stat-valeur">${minSemaine} min</div><div class="stat-label">cette semaine</div></div>
-    ${statParcours}`;
+    <div class="stat"><div class="stat-valeur">${totalFaits}/${totalEtapes}</div><div class="stat-label">étapes de parcours</div></div>`;
 
   /* Calendrier du mois en cours */
   const cal = $("#calendrier");
@@ -1163,17 +1257,23 @@ function importerProfil(fichier) {
         : "date inconnue";
 
       const nbSeances  = src.historique?.length  ?? 0;
+      const srcParcoursMode = src.parcoursModeFait ?? src.parcoursFait?.filter(id => /^m\d+/.test(id)) ?? [];
       const srcParcours1 = src.parcours1Fait ?? src.parcoursFait?.filter(id => /^p\d+/.test(id)) ?? [];
       const srcParcours2 = src.parcours2Fait ?? src.parcoursFait?.filter(id => /^q\d+/.test(id)) ?? [];
+      const srcParcoursEmotions = src.parcoursEmotionsFait ?? src.parcoursFait?.filter(id => /^d\d+/.test(id)) ?? [];
+      const nbParcoursMode = srcParcoursMode.length;
       const nbParcours1 = srcParcours1.length;
       const nbParcours2 = srcParcours2.length;
+      const nbParcoursEmotions = srcParcoursEmotions.length;
       const nbBadges   = src.badges?.length       ?? 0;
 
       const confirme = window.confirm(
         `Importer la sauvegarde du ${dateExport} ?\n\n` +
         `• ${nbSeances} séance(s) dans l'historique\n` +
+        `• ${nbParcoursMode}/8 base(s) du mode d'emploi\n` +
         `• ${nbParcours1}/14 étape(s) du parcours débutant\n` +
         `• ${nbParcours2}/7 pratique(s) au quotidien\n` +
+        `• ${nbParcoursEmotions}/8 étape(s) émotions difficiles\n` +
         `• ${nbBadges} badge(s)\n\n` +
         `Vos données actuelles seront fusionnées avec cette sauvegarde.`
       );
@@ -1183,10 +1283,14 @@ function importerProfil(fichier) {
       const fusionne = { ...etatDefaut, ...etat };
 
       // Parcours : union des ids complétés, avec compatibilité anciens exports
+      const setParcoursMode = new Set([...(etat.parcoursModeFait ?? []), ...srcParcoursMode]);
       const setParcours1 = new Set([...(etat.parcours1Fait ?? []), ...srcParcours1]);
       const setParcours2 = new Set([...(etat.parcours2Fait ?? []), ...srcParcours2]);
+      const setParcoursEmotions = new Set([...(etat.parcoursEmotionsFait ?? []), ...srcParcoursEmotions]);
+      fusionne.parcoursModeFait = [...setParcoursMode];
       fusionne.parcours1Fait = [...setParcours1];
       fusionne.parcours2Fait = [...setParcours2];
+      fusionne.parcoursEmotionsFait = [...setParcoursEmotions];
       delete fusionne.parcoursFait;
 
       // Badges : union
@@ -1210,7 +1314,7 @@ function importerProfil(fichier) {
       sauver();
       appliquerTheme();
       rendreJournal();
-      msgImport(`✓ Profil importé (${nbSeances} séances, ${nbParcours1 + nbParcours2} étapes de parcours).`);
+      msgImport(`✓ Profil importé (${nbSeances} séances, ${nbParcoursMode + nbParcours1 + nbParcours2 + nbParcoursEmotions} étapes de parcours).`);
 
     } catch {
       msgImport("❌ Erreur de lecture — fichier corrompu ?", true);

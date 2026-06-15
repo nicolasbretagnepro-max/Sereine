@@ -272,6 +272,32 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 }
 
 /* ---------- Parcours ---------- */
+.guide-appel {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.2rem;
+  border-radius: var(--rayon);
+  background: var(--fond-2);
+  box-shadow: var(--carte-ombre);
+  text-align: left;
+}
+.guide-appel-icone {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--lavande-pale);
+  color: var(--sauge-fonce);
+  font-weight: 800;
+}
+.guide-appel span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: .1rem; }
+.guide-appel strong { font-size: .96rem; }
+.guide-appel small { color: var(--encre-2); font-size: .8rem; line-height: 1.4; }
 .parcours-sections { display: flex; flex-direction: column; gap: 1.2rem; }
 .parcours-section {
   display: flex;
@@ -380,6 +406,35 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .parcours-titre { font-weight: 600; font-size: .98rem; }
 .parcours-meta { font-size: .8rem; color: var(--encre-2); }
 .parcours-etat { font-size: 1.1rem; }
+
+/* ---------- Guide pratique ---------- */
+.guide-contenu {
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 3rem 1.4rem 1rem;
+}
+.guide-liste { display: flex; flex-direction: column; gap: .85rem; }
+.guide-point {
+  display: flex;
+  gap: .85rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--rayon);
+  background: var(--fond-2);
+  box-shadow: var(--carte-ombre);
+}
+.guide-point-icone {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sauge-pale);
+  color: var(--sauge-fonce);
+}
+.guide-point h2 { font-size: .98rem; margin-bottom: .2rem; }
+.guide-point p { color: var(--encre-2); font-size: .9rem; line-height: 1.5; }
 
 /* ---------- Respiration (liste) ---------- */
 .resp-liste { display: flex; flex-direction: column; gap: .9rem; }

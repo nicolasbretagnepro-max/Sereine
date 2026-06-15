@@ -135,8 +135,27 @@
       <!-- Vue : PARCOURS -->
     <main id="vue-parcours" class="vue hidden" tabindex="-1">
       <header class="entete"><h1 class="titre-vue">Parcours</h1></header>
-      <p class="vue-intro">Deux façons de pratiquer : apprendre les bases, puis faire entrer la méditation dans les gestes ordinaires.</p>
+      <p class="vue-intro">Apprenez les bases, puis choisissez une pratique adaptée à votre quotidien ou à vos émotions.</p>
+      <button id="guideMediterBtn" class="guide-appel">
+        <span class="guide-appel-icone" aria-hidden="true">?</span>
+        <span>
+          <strong>Comment méditer ?</strong>
+          <small>Posture, souffle, pensées : le mode d'emploi simple.</small>
+        </span>
+        <span aria-hidden="true">›</span>
+      </button>
       <div id="parcoursSections" class="parcours-sections"></div>
+    </main>
+
+    <!-- Vue : COMMENT MÉDITER -->
+    <main id="vue-guide" class="vue vue-pleine hidden" tabindex="-1">
+      <button class="btn-retour" data-retour-parcours aria-label="Retour aux parcours">←</button>
+      <div class="guide-contenu">
+        <p class="eyebrow">Guide pratique</p>
+        <h1 class="prepa-titre">Comment méditer ?</h1>
+        <p class="vue-intro">Une séance n'a pas besoin d'être parfaite. Elle a seulement besoin d'être assez claire pour que vous sachiez quoi faire.</p>
+        <div id="guideMediterContenu" class="guide-liste"></div>
+      </div>
     </main>
 
     <!-- Vue : RESPIRATION (liste) -->
