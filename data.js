@@ -965,34 +965,34 @@ const DATA = {
 
   /* ---------- BADGES ---------- */
   badges: [
-    { id: "b1", titre: "Première séance", icone: "🌱", test: s => s.sessions >= 1 },
-    { id: "b2", titre: "3 séances", icone: "🌿", test: s => s.sessions >= 3 },
-    { id: "b3", titre: "7 séances", icone: "🌳", test: s => s.sessions >= 7 },
-    { id: "b4", titre: "14 séances", icone: "🪴", test: s => s.sessions >= 14 },
-    { id: "b5", titre: "30 séances", icone: "🌲", test: s => s.sessions >= 30 },
-    { id: "b6", titre: "60 séances", icone: "🌳", test: s => s.sessions >= 60 },
-    { id: "b7", titre: "100 séances", icone: "🏔️", test: s => s.sessions >= 100 },
-    { id: "b8", titre: "30 minutes", icone: "⏳", test: s => s.minutes >= 30 },
-    { id: "b9", titre: "1 heure", icone: "🕰️", test: s => s.minutes >= 60 },
-    { id: "b10", titre: "3 heures", icone: "🧭", test: s => s.minutes >= 180 },
-    { id: "b11", titre: "10 heures", icone: "🕯️", test: s => s.minutes >= 600 },
-    { id: "b12", titre: "25 heures", icone: "🌌", test: s => s.minutes >= 1500 },
-    { id: "b13", titre: "3 jours", icone: "📍", test: s => s.joursDistincts >= 3 },
-    { id: "b14", titre: "7 jours", icone: "📅", test: s => s.joursDistincts >= 7 },
-    { id: "b15", titre: "14 jours", icone: "🗓️", test: s => s.joursDistincts >= 14 },
-    { id: "b16", titre: "30 jours", icone: "🌙", test: s => s.joursDistincts >= 30 },
-    { id: "b17", titre: "Mode d'emploi", icone: "🧩", test: s => s.parcoursMode >= 8 },
-    { id: "b18", titre: "Débutant terminé", icone: "🌾", test: s => s.parcours1 >= 14 },
-    { id: "b19", titre: "Au quotidien", icone: "☕", test: s => s.parcours2 >= 7 },
-    { id: "b20", titre: "Émotions", icone: "🌊", test: s => s.parcoursEmotions >= 8 },
-    { id: "b21", titre: "Tous les parcours", icone: "✨", test: s => s.tousParcours },
-    { id: "b22", titre: "Respirer", icone: "💨", test: s => s.respirations >= 1 },
-    { id: "b23", titre: "Express", icone: "⚡", test: s => s.express >= 1 },
-    { id: "b24", titre: "Libre", icone: "🧘", test: s => s.libres >= 1 },
-    { id: "b25", titre: "5 pratiques", icone: "🧺", test: s => s.types >= 5 },
-    { id: "b26", titre: "Je reviens", icone: "🌤️", test: s => s.retour7 },
-    { id: "b27", titre: "Rien n'est perdu", icone: "🌧️", test: s => s.retour14 },
-    { id: "b28", titre: "Toujours là", icone: "🌅", test: s => s.retour30 }
+    { id: "b1", titre: "Première séance", icone: "🌱", desc: "Votre toute première séance enregistrée.", test: s => s.sessions >= 1 },
+    { id: "b2", titre: "3 séances", icone: "🌿", desc: "Trois séances pratiquées.", test: s => s.sessions >= 3 },
+    { id: "b3", titre: "7 séances", icone: "🌳", desc: "Sept séances : l'habitude prend forme.", test: s => s.sessions >= 7 },
+    { id: "b4", titre: "14 séances", icone: "🪴", desc: "Quatorze séances au compteur.", test: s => s.sessions >= 14 },
+    { id: "b5", titre: "30 séances", icone: "🌲", desc: "Trente séances : belle constance.", test: s => s.sessions >= 30 },
+    { id: "b6", titre: "60 séances", icone: "🌳", desc: "Soixante séances accomplies.", test: s => s.sessions >= 60 },
+    { id: "b7", titre: "100 séances", icone: "🏔️", desc: "Cent séances : un cap rare.", test: s => s.sessions >= 100 },
+    { id: "b8", titre: "30 minutes", icone: "⏳", desc: "30 minutes cumulées de pratique.", test: s => s.minutes >= 30 },
+    { id: "b9", titre: "1 heure", icone: "🕰️", desc: "Une heure de méditation au total.", test: s => s.minutes >= 60 },
+    { id: "b10", titre: "3 heures", icone: "🧭", desc: "Trois heures cumulées.", test: s => s.minutes >= 180 },
+    { id: "b11", titre: "10 heures", icone: "🕯️", desc: "Dix heures de pratique.", test: s => s.minutes >= 600 },
+    { id: "b12", titre: "25 heures", icone: "🌌", desc: "Vingt-cinq heures cumulées.", test: s => s.minutes >= 1500 },
+    { id: "b13", titre: "3 jours", icone: "📍", desc: "Pratique répartie sur 3 jours différents.", test: s => s.joursDistincts >= 3 },
+    { id: "b14", titre: "7 jours", icone: "📅", desc: "Sept jours de pratique distincts.", test: s => s.joursDistincts >= 7 },
+    { id: "b15", titre: "14 jours", icone: "🗓️", desc: "Quatorze jours différents pratiqués.", test: s => s.joursDistincts >= 14 },
+    { id: "b16", titre: "30 jours", icone: "🌙", desc: "Trente jours de pratique distincts.", test: s => s.joursDistincts >= 30 },
+    { id: "b17", titre: "Mode d'emploi", icone: "🧩", desc: "Les 8 bases du mode d'emploi terminées.", test: s => s.parcoursMode >= 8 },
+    { id: "b18", titre: "Débutant terminé", icone: "🌾", desc: "Les 14 séances du parcours débutant terminées.", test: s => s.parcours1 >= 14 },
+    { id: "b19", titre: "Au quotidien", icone: "☕", desc: "Le parcours « Au quotidien » terminé.", test: s => s.parcours2 >= 7 },
+    { id: "b20", titre: "Émotions", icone: "🌊", desc: "Le parcours « Émotions difficiles » terminé.", test: s => s.parcoursEmotions >= 8 },
+    { id: "b21", titre: "Tous les parcours", icone: "✨", desc: "Tous les parcours terminés.", test: s => s.tousParcours },
+    { id: "b22", titre: "Respirer", icone: "💨", desc: "Une première respiration guidée.", test: s => s.respirations >= 1 },
+    { id: "b23", titre: "Express", icone: "⚡", desc: "Une première séance express.", test: s => s.express >= 1 },
+    { id: "b24", titre: "Libre", icone: "🧘", desc: "Une première méditation libre.", test: s => s.libres >= 1 },
+    { id: "b25", titre: "5 pratiques", icone: "🧺", desc: "Cinq types de pratiques différents essayés.", test: s => s.types >= 5 },
+    { id: "b26", titre: "Je reviens", icone: "🌤️", desc: "Retour à la pratique après une pause d'au moins 7 jours.", test: s => s.retour7 },
+    { id: "b27", titre: "Rien n'est perdu", icone: "🌧️", desc: "Retour après une pause d'au moins 14 jours.", test: s => s.retour14 },
+    { id: "b28", titre: "Toujours là", icone: "🌅", desc: "Retour après une pause d'au moins 30 jours.", test: s => s.retour30 }
   ],
 
   /* ---------- HUMEURS & RECOMMANDATIONS ---------- */
@@ -1065,13 +1065,12 @@ const DATA = {
       { icone: "🤲", texte: "Cet après-midi : posez les mains à plat et sentez leur contact avec la surface." }
     ],
     soir: [
-      { icone: "🌙", texte: "Ce soir : posez votre téléphone 10 minutes avant de dormir." },
+      { icone: "🌬️", texte: "Ce soir : cinq expirations lentes pour marquer la fin de la journée." },
       { icone: "🕯️", texte: "Ce soir : quel a été le meilleur moment de votre journée, même minuscule ?" },
-      { icone: "🌬️", texte: "Ce soir : cinq expirations lentes pour mettre fin à la journée." },
-      { icone: "🌟", texte: "Ce soir : pensez à une chose pour laquelle vous êtes reconnaissant." },
-      { icone: "📖", texte: "Ce soir : lisez quelques pages d'un livre (pas d'écran) avant de dormir." },
+      { icone: "🌟", texte: "Ce soir : repérez une chose, simple, pour laquelle vous êtes reconnaissant." },
       { icone: "🌸", texte: "Ce soir : vous avez fait de votre mieux aujourd'hui. C'est suffisant." },
-      { icone: "🛁", texte: "Ce soir : lors de votre routine du soir, faites une seule chose à la fois." }
+      { icone: "🛁", texte: "Ce soir : pendant votre routine du soir, faites une seule chose à la fois, pleinement." },
+      { icone: "🌙", texte: "Ce soir : trois respirations posées, attention sur l'expiration, avant de vous coucher." }
     ]
   }
 };

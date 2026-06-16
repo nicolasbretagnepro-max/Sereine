@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Sereine — votre coach personnel de méditation et de respiration. Simple, guidé, bienveillant.">
   <meta name="theme-color" content="#F7F4ED">
+  <meta name="theme-color" content="#1E2421" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Sereine">
@@ -196,7 +198,9 @@
       </section>
       <section class="bloc">
         <h2 class="bloc-titre">Vos badges</h2>
+        <p class="bloc-sous">Touchez un badge pour savoir comment il s'obtient.</p>
         <div id="badges" class="badges"></div>
+        <p id="badgeDetail" class="badge-detail hidden" aria-live="polite"></p>
       </section>
 
       <!-- Sauvegarde / Import-Export -->
@@ -320,5 +324,13 @@
 
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script>
+    /* Service Worker : mise en cache hors-ligne + chargement plus rapide. */
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

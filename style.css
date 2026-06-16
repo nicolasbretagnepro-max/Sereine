@@ -319,7 +319,12 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   color: var(--sauge-fonce);
   font-size: .78rem;
   font-weight: 700;
+  white-space: nowrap;
 }
+.parcours-progression.statut-neuf { background: var(--fond-2); color: var(--encre-2); }
+.parcours-progression.statut-encours { background: var(--bleu-pale); color: var(--encre); }
+.parcours-progression.statut-termine { background: var(--sauge); color: #fff; }
+[data-theme="sombre"] .parcours-progression.statut-termine { color: #1E2421; }
 .parcours-prochaine {
   width: 100%;
   display: flex;
@@ -341,6 +346,17 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   letter-spacing: 0;
   text-transform: uppercase;
 }
+.parcours-prochaine-position {
+  align-self: flex-start;
+  margin: .1rem 0 .15rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  color: var(--encre);
+  font-size: .76rem;
+  font-weight: 700;
+}
+[data-theme="sombre"] .parcours-prochaine-position { background: rgba(0, 0, 0, .22); }
 .parcours-prochaine-titre {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   font-size: 1.18rem;
@@ -554,7 +570,19 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .graph-val { font-size: .85rem; font-weight: 700; }
 .graph-vide { color: var(--encre-2); font-size: .9rem; padding: 1rem 0; }
 
-.calendrier { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; margin-top: .8rem; }
+.calendrier { display: flex; flex-direction: column; gap: .6rem; margin-top: .8rem; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.cal-mois { font-weight: 700; font-size: .92rem; text-transform: capitalize; color: var(--encre); }
+.cal-fleche {
+  width: 2.1rem; height: 2.1rem; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border: none; border-radius: 999px; cursor: pointer;
+  background: var(--fond-2); color: var(--encre); font-size: 1.2rem; line-height: 1;
+  box-shadow: var(--carte-ombre); transition: opacity var(--transition), transform var(--transition);
+}
+.cal-fleche:active { transform: scale(.92); }
+.cal-fleche:disabled { opacity: .3; cursor: default; box-shadow: none; }
+.cal-grille { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; }
 .cal-jour {
   aspect-ratio: 1; display: grid; place-items: center;
   border-radius: 10px; font-size: .78rem; color: var(--encre-2);
@@ -571,9 +599,25 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   padding: .9rem .4rem; border-radius: var(--rayon);
   background: var(--fond-2); box-shadow: var(--carte-ombre);
   font-size: .72rem; font-weight: 600; text-align: center;
+  border: 2px solid transparent; color: var(--encre);
+  font-family: inherit; width: 100%; cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition);
 }
+.badge:active { transform: scale(.96); }
+.badge[aria-pressed="true"] { border-color: var(--sauge); }
 .badge span:first-child { font-size: 1.5rem; }
 .badge.verrouille { opacity: .35; filter: grayscale(1); box-shadow: none; }
+
+.badge-detail {
+  margin-top: .8rem; padding: .8rem 1rem;
+  display: flex; flex-direction: column; gap: .2rem;
+  background: var(--sauge-pale); border-left: 4px solid var(--sauge);
+  border-radius: 12px;
+}
+.badge-detail-titre { font-weight: 700; font-size: .95rem; color: var(--encre); }
+.badge-detail-texte { font-size: .88rem; color: var(--encre-2); line-height: 1.4; }
+.badge-detail-etat { margin-top: .2rem; font-size: .78rem; font-weight: 700; color: var(--encre-2); }
+.badge-detail-etat.obtenu { color: var(--sauge-fonce); }
 
 /* ---------- Préparation ---------- */
 .prepa-contenu { max-width: 440px; margin: 0 auto; width: 100%; padding: 3rem 1.4rem 1rem; display: flex; flex-direction: column; gap: 1rem; }

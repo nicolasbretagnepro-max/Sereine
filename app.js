@@ -115,18 +115,41 @@ function entreeHistorique(item, minutes, type = null) {
    avec l'id de la séance, il sera joué à la place du guidage texte.
    ============================================================ */
 let audioCtx = null;
+
+/**
+ * Renvoie un AudioContext en état de marche.
+ * - Le recrée s'il n'existe pas ou s'il a été "closed" (iOS peut fermer le
+ *   contexte après une longue mise en arrière-plan : c'est la cause du
+ *   "plus de son tant que je ne ferme/rouvre pas l'app").
+ * - Tente toujours de le relancer s'il est "suspended" ou "interrupted".
+ */
 function ctxAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume(); // Promise ignorée volontairement
+  if (!audioCtx || audioCtx.state === "closed") {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // iOS suspend/"interrompt" le contexte en arrière-plan : on le relance
+    // automatiquement à chaque changement d'état.
+    audioCtx.addEventListener("statechange", () => {
+      if (audioCtx && audioCtx.state !== "running" && audioCtx.state !== "closed") {
+        audioCtx.resume().catch(() => {});
+      }
+    });
+  }
+  if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
   return audioCtx;
 }
 
 /**
- * iOS Safari : déverrouille l'AudioContext dès le premier geste utilisateur.
- * Un buffer silencieux d'1 sample suffit à faire passer le contexte
- * de "suspended" à "running". Sans ça, aucun son ne sort sur iOS/PWA.
+ * iOS Safari : (ré)active la sortie audio sur un geste utilisateur.
+ * Un buffer silencieux d'1 sample fait repasser le contexte de
+ * "suspended"/"interrupted" à "running". Sans ça, aucun son ne sort.
+ *
+ * Important : ce gestionnaire reste actif sur CHAQUE geste (et non une seule
+ * fois comme avant). Le contexte peut être suspendu plusieurs fois dans une
+ * même session (arrière-plan, écran verrouillé, autre app qui joue du son…) ;
+ * il faut donc pouvoir le réveiller à n'importe quel moment, pas qu'au tout
+ * premier tap.
  */
-function debloquerAudio() {
+function reveillerAudio() {
   try {
     const ctx = ctxAudio();
     const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
@@ -137,35 +160,43 @@ function debloquerAudio() {
   } catch { /* audio indisponible */ }
 }
 
-/* Déverrouillage sur le premier geste (touchstart = iOS, click = desktop) */
-["touchstart", "click"].forEach(ev =>
-  document.addEventListener(ev, debloquerAudio, { once: true, passive: true })
+/* Réveil de l'audio à chaque geste (touchend = iOS, click = desktop) */
+["touchend", "click"].forEach(ev =>
+  document.addEventListener(ev, reveillerAudio, { passive: true })
 );
 
-/* Reprendre l'AudioContext si l'app revient au premier plan (iOS PWA, verrou écran) */
+/* Reprendre l'audio quand l'app revient au premier plan (iOS PWA, verrou écran).
+   ctxAudio() recrée le contexte s'il a été fermé entre-temps. */
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && audioCtx) {
-    audioCtx.resume().catch(() => {});
+  if (document.visibilityState === "visible") {
+    try { ctxAudio(); } catch { /* ignore */ }
   }
 });
 
 /** Cloche de début : superposition de deux sinus, tonalité douce. */
 function cloche(volume = .6) {
-  try {
-    const ctx = ctxAudio();
-    const t = ctx.currentTime;
-    [[523.25, 1], [784, .4]].forEach(([freq, gainRel]) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(volume * gainRel * .25, t + .02);
-      g.gain.exponentialRampToValueAtTime(.0001, t + 3.5);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t); osc.stop(t + 3.6);
-    });
-  } catch { /* audio indisponible : silencieux */ }
+  let ctx;
+  try { ctx = ctxAudio(); } catch { return; }
+  const jouer = () => {
+    try {
+      const t = ctx.currentTime + 0.04; // légère avance : démarrage plus fiable
+      [[523.25, 1], [784, .4]].forEach(([freq, gainRel]) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(volume * gainRel * .25, t + .02);
+        g.gain.exponentialRampToValueAtTime(.0001, t + 3.5);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(t); osc.stop(t + 3.6);
+      });
+    } catch { /* audio indisponible : silencieux */ }
+  };
+  // Si le contexte n'est pas encore actif, jouer APRÈS sa reprise : sinon le son,
+  // planifié sur un contexte suspendu, est perdu (cause du "pas de son" résiduel).
+  if (ctx.state === "running") jouer();
+  else ctx.resume().then(jouer).catch(() => {});
 }
 
 /**
@@ -174,32 +205,39 @@ function cloche(volume = .6) {
  * Accompagné d'une vibration douce si l'appareil le supporte.
  */
 function bolTibetain(volume = .6) {
-  try {
-    const ctx = ctxAudio();
-    const t = ctx.currentTime;
-    // Partielle fondamentale + harmoniques inharmoniques typiques des bols
-    const partiels = [
-      [396,   1.00],   // fondamentale
-      [871,   0.45],   // × 2.20
-      [1703,  0.18],   // × 4.30
-      [3089,  0.07],   // × 7.80
-    ];
-    partiels.forEach(([freq, rel]) => {
-      const osc = ctx.createOscillator();
-      const g   = ctx.createGain();
-      osc.type  = "sine";
-      osc.frequency.value = freq;
-      // Attaque quasi instantanée (frappe de mailloche), déclin très lent
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(volume * rel * .32, t + .015);
-      g.gain.exponentialRampToValueAtTime(.0001, t + 7.0);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 7.1);
-    });
-  } catch { /* audio indisponible : silencieux */ }
+  let ctx;
+  try { ctx = ctxAudio(); } catch { ctx = null; }
+  if (ctx) {
+    const jouer = () => {
+      try {
+        const t = ctx.currentTime + 0.04;
+        // Partielle fondamentale + harmoniques inharmoniques typiques des bols
+        const partiels = [
+          [396,   1.00],   // fondamentale
+          [871,   0.45],   // × 2.20
+          [1703,  0.18],   // × 4.30
+          [3089,  0.07],   // × 7.80
+        ];
+        partiels.forEach(([freq, rel]) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type  = "sine";
+          osc.frequency.value = freq;
+          // Attaque quasi instantanée (frappe de mailloche), déclin très lent
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(volume * rel * .32, t + .015);
+          g.gain.exponentialRampToValueAtTime(.0001, t + 7.0);
+          osc.connect(g).connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 7.1);
+        });
+      } catch { /* audio indisponible : silencieux */ }
+    };
+    if (ctx.state === "running") jouer();
+    else ctx.resume().then(jouer).catch(() => {});
+  }
 
-  // Vibration douce (deux pulsations brèves, style "bol")
+  // Vibration douce (deux pulsations brèves, style "bol") — indépendante de l'audio
   try {
     if (navigator.vibrate) navigator.vibrate([100, 60, 100]);
   } catch { /* vibration indisponible */ }
@@ -275,8 +313,14 @@ function programmerBol(delaiSec, volume = .6) {
   } catch { /* audio indisponible */ }
 }
 
+/* Aucun fichier mp3 n'est fourni (tout l'audio est synthétisé). On désactive
+   donc la tentative de chargement réseau qui échouait à chaque séance et
+   ajoutait un délai inutile. Passer à true si des mp3 sont ajoutés un jour. */
+const AUDIO_MP3 = false;
+
 /** Tente de charger un mp3 (assets/audio/<id>.mp3). Renvoie un <audio> ou null. */
 function chargerMp3(id) {
+  if (!AUDIO_MP3) return Promise.resolve(null);
   return new Promise(resolve => {
     const a = new Audio(`assets/audio/${id}.mp3`);
     a.addEventListener("canplaythrough", () => resolve(a), { once: true });
@@ -290,26 +334,32 @@ function chargerMp3(id) {
    API Screen Wake Lock (supportée sur iOS 16.4+ et Chrome Android)
    ============================================================ */
 let wakeLockSentinel = null;
+let wakeLockVoulu = false; // true tant qu'une séance est en cours
 
 async function activerWakeLock() {
+  wakeLockVoulu = true;
   try {
     if ("wakeLock" in navigator) {
       wakeLockSentinel = await navigator.wakeLock.request("screen");
+      // iOS/Android libèrent le verrou en arrière-plan : on l'oublie proprement
+      // pour pouvoir le réacquérir au retour au premier plan.
+      wakeLockSentinel.addEventListener("release", () => { wakeLockSentinel = null; });
     }
   } catch { /* non supporté ou refusé */ }
 }
 
 function libererWakeLock() {
+  wakeLockVoulu = false;
   if (wakeLockSentinel) {
     wakeLockSentinel.release().catch(() => {});
     wakeLockSentinel = null;
   }
 }
 
-// Réacquérir le verrou si l'onglet redevient visible (ex. retour depuis l'app)
-document.addEventListener("visibilitychange", async () => {
-  if (wakeLockSentinel !== null && document.visibilityState === "visible") {
-    await activerWakeLock();
+// Réacquérir le verrou au retour au premier plan, tant qu'une séance est active.
+document.addEventListener("visibilitychange", () => {
+  if (wakeLockVoulu && !wakeLockSentinel && document.visibilityState === "visible") {
+    activerWakeLock();
   }
 });
 
@@ -322,7 +372,12 @@ function montrerVue(nom) {
   vue.classList.remove("hidden");
   vue.focus({ preventScroll: true });
   window.scrollTo({ top: 0 });
-  $$(".nav-item").forEach(b => b.classList.toggle("nav-actif", b.dataset.vue === nom));
+  $$(".nav-item").forEach(b => {
+    const actif = b.dataset.vue === nom;
+    b.classList.toggle("nav-actif", actif);
+    if (actif) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
   const navVisible = ["accueil", "parcours", "respiration", "biblio", "journal"].includes(nom);
   $(".navbas").style.display = navVisible ? "" : "none";
   if (nom === "accueil") rendreAccueil();
@@ -342,6 +397,11 @@ function appliquerTheme() {
   const prefereSombre = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const sombre = etat.theme ? etat.theme === "sombre" : prefereSombre;
   document.documentElement.dataset.theme = sombre ? "sombre" : "clair";
+  const tb = $("#themeBtn");
+  if (tb) {
+    tb.setAttribute("aria-pressed", String(sombre));
+    tb.setAttribute("aria-label", sombre ? "Passer au thème clair" : "Passer au thème sombre");
+  }
 }
 $("#themeBtn").addEventListener("click", () => {
   const actuel = document.documentElement.dataset.theme;
@@ -558,9 +618,11 @@ function rendreAccueil() {
     `${reco.item.duree} min`;
   $("#heroBtn").onclick = () => ouvrirPrepa(reco.type, reco.item);
 
-  /* Micro-apprentissage du jour (stable sur la journée) */
-  const graine = parseInt(aujourdHui().replaceAll("-", ""), 10);
-  $("#microAccueil").textContent = "💡 " + DATA.micro[graine % DATA.micro.length];
+  /* Le bandeau "💡" d'aphorismes a été retiré de l'accueil : peu actionnable et
+     redondant avec l'onboarding et la pédagogie affichée avant chaque séance.
+     On garde un seul bloc utile : la micro-pratique du jour (ci-dessous). */
+  const micro = $("#microAccueil");
+  if (micro) { micro.textContent = ""; micro.classList.add("hidden"); }
 
   /* Ancre du jour */
   rendreAncreDuJour();
@@ -659,16 +721,25 @@ function sectionParcours({ type, titre, promesse, meta, liste, faits, labelProch
   const index = liste.findIndex(s => s.id === prochaine.id);
   const debloque = termine || estDebloquee(type, liste, index);
 
+  const faitsCount = Math.min(faits.length, liste.length);
+  // Unité d'étape déduite du libellé ("Prochaine séance" -> "séance", etc.)
+  const unite = (labelProchaine || "étape").replace(/^Prochaine\s+/i, "").trim() || "étape";
+  const uniteCap = unite.charAt(0).toUpperCase() + unite.slice(1);
+  const position = index + 1; // numéro de la prochaine étape (1-based)
+  const statut = termine ? "Terminé" : faitsCount === 0 ? "À commencer" : "En cours";
+  const statutClasse = termine ? "termine" : faitsCount === 0 ? "neuf" : "encours";
+
   section.innerHTML = `
     <div class="parcours-section-entete">
       <div>
         <h2 class="parcours-section-titre">${titre}</h2>
         <p class="parcours-section-sous">${promesse}</p>
       </div>
-      <span class="parcours-progression">${Math.min(faits.length, liste.length)}/${liste.length}</span>
+      <span class="parcours-progression statut-${statutClasse}">${statut} · ${faitsCount}/${liste.length}</span>
     </div>
     <button class="parcours-prochaine${termine ? " fait" : ""}" ${debloque ? "" : "disabled"}>
       <span class="parcours-prochaine-label">${termine ? "Parcours terminé" : labelProchaine}</span>
+      <span class="parcours-prochaine-position">${termine ? `${liste.length} / ${liste.length} étapes` : `${uniteCap} ${position} sur ${liste.length}`}</span>
       <span class="parcours-prochaine-titre">${prochaine.titre}</span>
       <span class="parcours-prochaine-meta">${meta} · ${prochaine.duree} min</span>
       <span class="parcours-prochaine-objectif">${termine ? "Vous pouvez refaire cette étape ou choisir une pratique libre." : prochaine.objectif}</span>
@@ -898,6 +969,9 @@ async function lancerLecteur({ item }) {
   lecteur.ecoule = 0;
   lecteur.total = item.duree * 60;
   lecteur.enPause = false;
+  lecteur.debut = Date.now();   // horodatage de départ (horloge réelle)
+  lecteur.pauseMs = 0;          // durée totale passée en pause (ms)
+  lecteur.pauseDebut = null;    // début de la pause en cours (ms) ou null
   lecteur.item = item;
   lecteur.guidage = guidage;
   lecteur.sons = sons;
@@ -929,7 +1003,12 @@ async function lancerLecteur({ item }) {
 
 function tickLecteur(premier = false) {
   if (lecteur.enPause) return;
-  if (!premier) lecteur.ecoule++;
+  // Temps écoulé mesuré sur l'horloge réelle (Date.now), et non sur le nombre
+  // de ticks : un setInterval est gelé ou ralenti quand l'écran est verrouillé
+  // ou l'app en arrière-plan. L'ancien comptage "+1 par tick" sous-estimait
+  // donc le temps réel (d'où l'impression de bug sur le calcul du temps).
+  const ecouleReel = Math.floor((Date.now() - lecteur.debut - lecteur.pauseMs) / 1000);
+  lecteur.ecoule = Math.min(lecteur.total, Math.max(0, ecouleReel));
 
   $("#lecteurTemps").textContent = `${mn(lecteur.ecoule)} / ${mn(lecteur.total)}`;
   $("#lecteurProgress").style.width = `${(lecteur.ecoule / lecteur.total) * 100}%`;
@@ -950,6 +1029,13 @@ function tickLecteur(premier = false) {
 
 $("#lecteurPause").addEventListener("click", () => {
   lecteur.enPause = !lecteur.enPause;
+  // Comptabiliser la durée de pause pour ne pas la compter comme du temps médité.
+  if (lecteur.enPause) {
+    lecteur.pauseDebut = Date.now();
+  } else if (lecteur.pauseDebut) {
+    lecteur.pauseMs += Date.now() - lecteur.pauseDebut;
+    lecteur.pauseDebut = null;
+  }
   $("#lecteurPause").textContent = lecteur.enPause ? "▶" : "⏸";
   $("#lecteurPause").setAttribute("aria-label", lecteur.enPause ? "Reprendre" : "Mettre en pause");
   $("#lecteurHalo").classList.toggle("pause", lecteur.enPause);
@@ -1014,6 +1100,7 @@ async function lancerSouffle(proto) {
   seanceCourante = { type: "resp", item: proto };
   souffle.actif = true;
   souffle.ecoule = 0;
+  souffle.debut = Date.now();   // horloge réelle (cf. fix temps du lecteur)
   souffle.total = proto.duree * 60;
   /* iOS : debloquer l audio dans la pile du geste + boucle silencieuse. */
   try { ctxAudio(); } catch { /* ignore */ }
@@ -1051,7 +1138,7 @@ async function lancerSouffle(proto) {
   appliquerPhase();
 
   souffle.timer = setInterval(() => {
-    souffle.ecoule++;
+    souffle.ecoule = Math.min(souffle.total, Math.floor((Date.now() - souffle.debut) / 1000));
     phaseRestant--;
     compte.textContent = phaseRestant > 0 ? phaseRestant : "";
     $("#souffleTemps").textContent = `${mn(souffle.ecoule)} / ${mn(souffle.total)}`;
@@ -1086,6 +1173,19 @@ $("#souffleQuitter").addEventListener("click", () => {
   libererWakeLock();
   if (souffle.ecoule >= 30) { souffle.actif = true; finirSouffle(true); }
   else { souffle.actif = false; annulerBolProgramme(); arreterKeepAlive(); montrerVue("accueil"); }
+});
+
+/* Au retour au premier plan : recaler la séance en cours sur l'horloge réelle.
+   Si la durée totale a été atteinte pendant que l'écran était verrouillé,
+   la séance se termine proprement (le temps enregistré reste juste). */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (lecteur.timer && !lecteur.fini && !lecteur.enPause) tickLecteur();
+  if (souffle.timer && souffle.actif) {
+    souffle.ecoule = Math.min(souffle.total, Math.floor((Date.now() - souffle.debut) / 1000));
+    $("#souffleTemps").textContent = `${mn(souffle.ecoule)} / ${mn(souffle.total)}`;
+    if (souffle.ecoule >= souffle.total) finirSouffle();
+  }
 });
 
 /* ============================================================
@@ -1261,6 +1361,66 @@ function pratiqueLaPlusFrequente(historique) {
   return libelleTypePratique(type);
 }
 
+/* ---------- Calendrier de pratique (navigable par mois) ---------- */
+let calVue = null; // { annee, mois } du mois affiché
+
+function decalerMois({ annee, mois }, delta) {
+  const d = new Date(annee, mois + delta, 1);
+  return { annee: d.getFullYear(), mois: d.getMonth() };
+}
+
+/* Bornes de navigation : du premier mois ayant une séance jusqu'au mois courant. */
+function bornesCalendrier() {
+  const now = new Date();
+  const max = { annee: now.getFullYear(), mois: now.getMonth() };
+  const dates = etat.historique.map(e => e.date).filter(Boolean).sort();
+  if (!dates.length) return { min: { ...max }, max };
+  const [ya, ma] = dates[0].split("-").map(Number);
+  return { min: { annee: ya, mois: ma - 1 }, max };
+}
+
+function rendreCalendrier() {
+  const cal = $("#calendrier");
+  if (!cal) return;
+  if (!calVue) { const n = new Date(); calVue = { annee: n.getFullYear(), mois: n.getMonth() }; }
+
+  const { annee, mois } = calVue;
+  const b = bornesCalendrier();
+  const idx    = annee * 12 + mois;
+  const idxMin = b.min.annee * 12 + b.min.mois;
+  const idxMax = b.max.annee * 12 + b.max.mois;
+  const peutPrec = idx > idxMin;
+  const peutSuiv = idx < idxMax;
+
+  const joursPratiques = new Set(etat.historique.map(e => e.date));
+  const nbJours    = new Date(annee, mois + 1, 0).getDate();
+  const premierJour = (new Date(annee, mois, 1).getDay() + 6) % 7; // lundi = 0
+  const nomMois = new Date(annee, mois, 1)
+    .toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
+  let grille = ["L", "M", "M", "J", "V", "S", "D"].map(j => `<span class="cal-entete">${j}</span>`).join("");
+  for (let i = 0; i < premierJour; i++) grille += `<span></span>`;
+  for (let j = 1; j <= nbJours; j++) {
+    const dateStr = `${annee}-${String(mois + 1).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
+    const classes = ["cal-jour"];
+    if (joursPratiques.has(dateStr)) classes.push("pratique");
+    if (dateStr === aujourdHui()) classes.push("aujourdhui");
+    grille += `<span class="${classes.join(" ")}">${j}</span>`;
+  }
+
+  cal.innerHTML = `
+    <div class="cal-nav">
+      <button type="button" class="cal-fleche" id="calPrec" ${peutPrec ? "" : "disabled"} aria-label="Mois précédent">‹</button>
+      <span class="cal-mois">${nomMois}</span>
+      <button type="button" class="cal-fleche" id="calSuiv" ${peutSuiv ? "" : "disabled"} aria-label="Mois suivant">›</button>
+    </div>
+    <div class="cal-grille">${grille}</div>`;
+
+  const prec = $("#calPrec"), suiv = $("#calSuiv");
+  if (prec && peutPrec) prec.onclick = () => { calVue = decalerMois(calVue, -1); rendreCalendrier(); };
+  if (suiv && peutSuiv) suiv.onclick = () => { calVue = decalerMois(calVue,  1); rendreCalendrier(); };
+}
+
 function rendreJournal() {
   const s = statsGlobales();
 
@@ -1326,28 +1486,36 @@ function rendreJournal() {
     }).join("");
   }
 
-  /* Calendrier du mois en cours */
-  const cal = $("#calendrier");
-  const annee = maintenant.getFullYear(), mois = maintenant.getMonth();
-  const joursPratiques = new Set(etat.historique.map(e => e.date));
-  const nbJours = new Date(annee, mois + 1, 0).getDate();
-  const premierJour = (new Date(annee, mois, 1).getDay() + 6) % 7; // lundi = 0
-  let html = ["L", "M", "M", "J", "V", "S", "D"].map(j => `<span class="cal-entete">${j}</span>`).join("");
-  for (let i = 0; i < premierJour; i++) html += `<span></span>`;
-  for (let j = 1; j <= nbJours; j++) {
-    const dateStr = `${annee}-${String(mois + 1).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
-    const classes = ["cal-jour"];
-    if (joursPratiques.has(dateStr)) classes.push("pratique");
-    if (dateStr === aujourdHui()) classes.push("aujourdhui");
-    html += `<span class="${classes.join(" ")}">${j}</span>`;
-  }
-  cal.innerHTML = html;
+  /* Calendrier : on (ré)ouvre toujours sur le mois en cours, puis l'utilisateur
+     peut remonter vers les mois précédents qui contiennent des séances. */
+  { const n = new Date(); calVue = { annee: n.getFullYear(), mois: n.getMonth() }; }
+  rendreCalendrier();
 
-  /* Badges */
-  $("#badges").innerHTML = DATA.badges.map(b => {
-    const ok = etat.badges.includes(b.id) || b.test(s);
-    return `<div class="badge ${ok ? "" : "verrouille"}"><span>${b.icone}</span><span>${b.titre}</span></div>`;
-  }).join("");
+  /* Badges (cliquables : une courte explication s'affiche au clic) */
+  const badgesEl = $("#badges");
+  if (badgesEl) {
+    badgesEl.innerHTML = DATA.badges.map(b => {
+      const ok = etat.badges.includes(b.id) || b.test(s);
+      return `<button type="button" class="badge ${ok ? "" : "verrouille"}" data-badge="${b.id}" aria-pressed="false">` +
+        `<span aria-hidden="true">${b.icone}</span><span>${b.titre}</span></button>`;
+    }).join("");
+
+    const detail = $("#badgeDetail");
+    badgesEl.querySelectorAll(".badge").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const b = DATA.badges.find(x => x.id === btn.dataset.badge);
+        if (!b || !detail) return;
+        const ok = etat.badges.includes(b.id) || b.test(s);
+        badgesEl.querySelectorAll(".badge").forEach(x => x.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+        detail.classList.remove("hidden");
+        detail.innerHTML =
+          `<span class="badge-detail-titre">${b.icone} ${b.titre}</span>` +
+          `<span class="badge-detail-texte">${b.desc || ""}</span>` +
+          `<span class="badge-detail-etat ${ok ? "obtenu" : ""}">${ok ? "✓ Obtenu" : "À débloquer"}</span>`;
+      });
+    });
+  }
 }
 
 /* ============================================================
